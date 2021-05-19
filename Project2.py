@@ -1,13 +1,16 @@
 import sys
 import numpy as np
+import copy
 
 
+
+CHESSBOARD= np.ndarray((8,8),dtype=object)
 
 class square:
     def __init__(self, identifier, state):
         self.identifier=identifier      #Each square has a unique identifier (h3,h4 etc)
         self.state=state    #Tells if a sqaure is empty or not
-        self.chesspiece=chessPiece('nu','null',0) #what chesspiece is placed on the square if its not empty
+        self.chesspiece=chessPiece('null','null',0) #what chesspiece is placed on the square if its not empty
 
     
 
@@ -32,6 +35,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
                 st=chr(ord(st[0])+1)
             num=num-1
         self.placeChessPieces()
+        CHESSBOARD=self.array
 
     def placeChessPieces(self):
         
@@ -112,7 +116,20 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         self.array[7][st].chesspiece=King("black","e1")
         
         
+    def moveChessPiece(self, current, destination):
+        st=ord(current[0])-ord('a')
+        row=8-int(current[1])
+        dst=ord(destination[0])-ord('a')
+        drow=8-int(destination[1])
+        valid=self.array[row][st].chesspiece.checkValidMove(current,destination)
+        if valid==False:
+            print("Invalid Move!")
+            return
 
+        self.array[drow][dst].chesspiece=copy.deepcopy(self.array[row][st].chesspiece)
+        self.array[drow][dst].state=False
+        self.array[row][st].chesspiece.remove()
+        self.array[row][st].state=True
 
     def evaluationFunction():
         pass
@@ -135,54 +152,119 @@ class chessPiece:
         self.colour=colour
         self.position=position
 
+    def remove(self):
+        self.name="null"
+        self.colour="null"
 
 class Pawn(chessPiece):
     def __init__(self, colour, position):
-        chessPiece.__init__(self,'p',colour,position)
+        chessPiece.__init__(self,'♟',colour,position)
+        self.move=0 #Can take two steps in first move
 
-    def movementFunction():
-        pass
+    def checkValidMove(self,currentpos, destpos):
+        #Pawn can move only forward and diagonally(if opponent gets attacked)
+        if(ord(currentpos[0])+1==ord(destpos[0])):       #right diagonal
+            if(int(currentpos[1])+1==int(destpos[1])):                
+                return True 
+    
+        if(ord(currentpos[0])-1==ord(destpos[0])):       #left diagonal
+            if(int(currentpos[1])+1==int(destpos[1])):
+                return True 
+        
+        if(ord(currentpos[0])==ord(destpos[0])): #forward
+            if(int(currentpos[1])+1==int(destpos[1])):
+                return True
+        
+
+        return False    #Invalid Move
+
+        
+            
+
 
 
 class Bishop(chessPiece):
     def __init__(self, colour, position):
-        chessPiece.__init__(self,'b',colour,position)
+        chessPiece.__init__(self,'♝',colour,position)
 
-    def movementFunction():
-        pass
+    def checkValidMove(self,currentpos, destpos):
+        #Bishop can move diagonally 
+        if(abs(ord(currentpos[0])-ord(destpos[0])) == abs(int(currentpos[1])-int(destpos[1]))):                    
+            return True
+        
+        return False
 
 
 class Rook(chessPiece):
     def __init__(self, colour, position):
-        chessPiece.__init__(self,'r',colour,position)
+        chessPiece.__init__(self,'♜',colour,position)
 
-    def movementFunction():
-        pass
+    def checkValidMove(self,currentpos, destpos):
+
+        if(ord(currentpos[0])==ord(destpos[0])):      
+            return True
+        if(int(currentpos[1])==int(destpos[1])):                
+            return True
+    
+        return False
 
 
 class Knight(chessPiece):
     def __init__(self, colour, position):
-        chessPiece.__init__(self,'k',colour,position)
+        chessPiece.__init__(self,'♞',colour,position)
 
-    def movementFunction():
-        pass
+    def checkValidMove(self,currentpos, destpos):
+
+        if(ord(currentpos[0])+1==ord(destpos[0])):       
+            if(int(currentpos[1])+2==int(destpos[1]) or int(currentpos[1])-2==int(destpos[1]) ):                
+                return True 
+    
+        if(ord(currentpos[0])-1==ord(destpos[0])):       
+            if(int(currentpos[1])+2==int(destpos[1]) or int(currentpos[1])-2==int(destpos[1]) ):                
+                return True  
+    
+        return False    #Invalid Move
 
 
 class Queen(chessPiece):
     def __init__(self, colour, position):
-        chessPiece.__init__(self,'Q',colour,position)
+        chessPiece.__init__(self,'♛',colour,position)
 
-    def movementFunction():
-        pass
+    def checkValidMove(self,currentpos, destpos):
+
+        if(ord(currentpos[0])==ord(destpos[0])):      
+            return True
+        if(int(currentpos[1])==int(destpos[1])):                
+            return True
+        if(abs(ord(currentpos[0])-ord(destpos[0])) == abs(int(currentpos[1])-int(destpos[1]))):                    
+            return True
+        return False
 
 
    
 class King(chessPiece):
     def __init__(self, colour, position):
-        chessPiece.__init__(self,'K',colour,position)
+        chessPiece.__init__(self,'♚',colour,position)
 
-    def movementFunction():
-        pass
+    def checkValidMove(self,currentpos,destpos):
+        if(ord(currentpos[0])+1==ord(destpos[0])):       #right diagonal
+                if(int(currentpos[1])+1==int(destpos[1]) or int(currentpos[1])-1==int(destpos[1])):                
+                    return True 
+        
+        if(ord(currentpos[0])-1==ord(destpos[0])):       #left diagonal
+            if(int(currentpos[1])+1==int(destpos[1]) or int(currentpos[1])-1==int(destpos[1])):
+                return True 
+            
+        if(ord(currentpos[0])==ord(destpos[0])): #forward/backwards
+            if(int(currentpos[1])+1==int(destpos[1]) or int(currentpos[1])-1==int(destpos[1])):
+                return True
+            
+        if(int(currentpos[1])==int(destpos[1])): #sideways
+            if(ord(currentpos[0])-1==ord(destpos[0]) or ord(currentpos[0])+1==ord(destpos[0])):
+                return True
+            
+            
+        return False    #Invalid Move
 
 
 class Agent:
@@ -195,3 +277,16 @@ class Agent:
 board=chessBoard()
 board.initializeBoard()
 board.displayChessBoard()
+
+print("Enter current position and destined position\n")
+currentpos=input()
+destpos=input()
+board.moveChessPiece(currentpos,destpos)
+board.displayChessBoard()
+
+#1. prompt user to enter his move (store moves as well)
+#2. update chessboard
+#3. Agent's turn (decide which move is the best using minmax and alpha puning)
+#4. update chessboard
+#5. display it
+#6. repeat
