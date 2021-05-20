@@ -116,7 +116,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         self.array[7][st].chesspiece=King("black","e1")
         
         
-    def moveChessPiece(self, current, destination):
+    def moveChessPiece(self, current, destination, agent):
         st=ord(current[0])-ord('a')
         row=8-int(current[1])
         dst=ord(destination[0])-ord('a')
@@ -124,12 +124,33 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         valid=self.array[row][st].chesspiece.checkValidMove(current,destination)
         if valid==False:
             print("Invalid Move!")
+            return 
+
+        elif self.array[drow][dst].state==False:
+            if self.array[drow][dst].chesspiece.colour==agent.colour:
+                print("Invalid Move!")
+                return 
+
+        if self.array[row][st].chesspiece.pathClear(current,destination,self.array, agent)==False:
             return
+
+    
+
+        if self.array[drow][dst].state==False:
+            if self.array[drow][dst].chesspiece.colour!=agent.colour:
+                agent.attacked+=1
+                agent.attackedPieces.append(self.array[drow][dst].chesspiece)
+                self.array[drow][dst].chesspiece.remove()
 
         self.array[drow][dst].chesspiece=copy.deepcopy(self.array[row][st].chesspiece)
         self.array[drow][dst].state=False
         self.array[row][st].chesspiece.remove()
         self.array[row][st].state=True
+        print(self.array[row][st].identifier+" is emptied!")
+
+
+
+        
 
     def evaluationFunction():
         pass
@@ -151,6 +172,7 @@ class chessPiece:
         self.name=name
         self.colour=colour
         self.position=position
+        self.path=[] #Movement path for one turn, is used to check if it is clear or not
 
     def remove(self):
         self.name="null"
@@ -163,23 +185,30 @@ class Pawn(chessPiece):
 
     def checkValidMove(self,currentpos, destpos):
         #Pawn can move only forward and diagonally(if opponent gets attacked)
+        destxindex=int(destpos[1])
+        destyindex=ord(destpos[0])
         if(ord(currentpos[0])+1==ord(destpos[0])):       #right diagonal
-            if(int(currentpos[1])+1==int(destpos[1])):                
-                return True 
+            if(int(currentpos[1])+1==int(destpos[1])):   
+                    return True 
     
         if(ord(currentpos[0])-1==ord(destpos[0])):       #left diagonal
             if(int(currentpos[1])+1==int(destpos[1])):
-                return True 
+                    return True 
         
         if(ord(currentpos[0])==ord(destpos[0])): #forward
             if(int(currentpos[1])+1==int(destpos[1])):
-                return True
+                    return True 
         
 
         return False    #Invalid Move
 
         
-            
+    
+    def pathClear(self, currentpos, destpos, board, agent):
+        pass
+
+    
+
 
 
 
@@ -189,10 +218,65 @@ class Bishop(chessPiece):
 
     def checkValidMove(self,currentpos, destpos):
         #Bishop can move diagonally 
+ 
         if(abs(ord(currentpos[0])-ord(destpos[0])) == abs(int(currentpos[1])-int(destpos[1]))):                    
             return True
         
+
         return False
+
+    def pathClear(self, currentpos, destpos, board, agent):
+        currxindex=int(currentpos[1])
+        curryindex=ord(currentpos[0])-ord('a')
+        destxindex=int(destpos[1])
+        destyindex=ord(destpos[0])-ord('a')
+
+        if(destxindex>currxindex and destyindex>curryindex):  #upper right diagonal
+            currxindex+=1
+            curryindex+=1
+            while(currxindex!=destxindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move!")
+                    return False
+                currxindex+=1
+                curryindex+=1
+
+
+        if(destxindex<currxindex and destyindex>curryindex):  #lower right diagonal
+            currxindex-=1
+            curryindex+=1
+            while(currxindex!=destxindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move!")
+                    return False
+                currxindex-=1
+                curryindex+=1
+
+
+
+        if(destxindex>currxindex and destyindex<curryindex):  #upper left diagonal
+            currxindex+=1
+            curryindex-=1
+            while(currxindex!=destxindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move!")
+                    return False
+                currxindex+=1
+                curryindex-=1
+
+
+        if(destxindex<currxindex and destyindex<curryindex):  #lower left diagonal
+            currxindex+=1
+            curryindex-=1
+            while(currxindex!=destxindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move!")
+                    return False
+                currxindex-=1
+                curryindex-=1
+                
+        return True       
+
 
 
 class Rook(chessPiece):
@@ -207,6 +291,52 @@ class Rook(chessPiece):
             return True
     
         return False
+
+
+    def pathClear(self, currentpos, destpos, board, agent):
+        currxindex=int(currentpos[1])
+        curryindex=ord(currentpos[0])-ord('a')
+        destxindex=int(destpos[1])
+        destyindex=ord(destpos[0])-ord('a')
+
+        if(ord(currentpos[0])==ord(destpos[0]) and currxindex<destxindex ): #forward
+            currxindex+=1
+            while(currxindex!=destxindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print(currxindex,curryindex, board[8-currxindex][curryindex].state)
+                    print(destxindex,destyindex, board[8-destxindex][destyindex].state)
+                    print("Path not clear/Invalid move!")
+                    return False
+                currxindex+=1
+                
+
+        if(ord(currentpos[0])==ord(destpos[0]) and currxindex>destxindex ): #backward
+            currxindex-=1 
+            while(currxindex!=destxindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move!")
+                    return False
+                currxindex-=1
+
+
+        if(curryindex<destyindex and currxindex==destxindex ): #right
+            curryindex+=1
+            while(curryindex!=destyindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move!")
+                    return False
+                curryindex+=1
+
+        if(ord(currentpos[0])>ord(destpos[0]) and currxindex==destxindex ): #left
+            curryindex-=1
+            while(curryindex!=destyindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move1!")
+                    return False
+                curryindex-=1
+
+        return True
+          
 
 
 class Knight(chessPiece):
@@ -224,6 +354,9 @@ class Knight(chessPiece):
                 return True  
     
         return False    #Invalid Move
+    
+    def pathClear(self, currentpos, destpos, board, agent):
+        pass
 
 
 class Queen(chessPiece):
@@ -238,7 +371,104 @@ class Queen(chessPiece):
             return True
         if(abs(ord(currentpos[0])-ord(destpos[0])) == abs(int(currentpos[1])-int(destpos[1]))):                    
             return True
+
+
         return False
+
+    def pathClear(self, currentpos, destpos, board, agent):
+        currxindex=int(currentpos[1])
+        curryindex=ord(currentpos[0])-ord('a')
+        destxindex=int(destpos[1])
+        destyindex=ord(destpos[0])-ord('a')
+
+        
+
+        if(destxindex>currxindex and destyindex>curryindex):  #upper right diagonal
+            currxindex+=1
+            curryindex+=1
+            while(currxindex!=destxindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move1!")
+                    return False
+                currxindex+=1
+                curryindex+=1
+            return True
+
+        if(destxindex<currxindex and destyindex>curryindex):  #lower right diagonal
+            currxindex-=1
+            curryindex+=1
+            while(currxindex!=destxindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move2!")
+                    return False
+                currxindex-=1
+                curryindex+=1
+            return True
+
+
+        if(destxindex>currxindex and destyindex<curryindex):  #upper left diagonal
+            currxindex+=1
+            curryindex-=1
+            while(currxindex!=destxindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move3!")
+                    return False
+                currxindex+=1
+                curryindex-=1
+            return True
+
+        if(destxindex<currxindex and destyindex<curryindex):  #lower left diagonal
+            currxindex+=1
+            curryindex-=1
+            while(currxindex!=destxindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move4!")
+                    return False
+                currxindex-=1
+                curryindex-=1
+            return True
+
+        if(ord(currentpos[0])==ord(destpos[0]) and currxindex<destxindex ): #forward
+            currxindex+=1
+            while(currxindex!=destxindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print(currxindex,curryindex, board[8-currxindex][curryindex].state)
+                    print(destxindex,destyindex, board[8-destxindex][destyindex].state)
+                    print("Path not clear/Invalid move5!")
+                    return False
+                currxindex+=1
+            return True   
+
+        if(ord(currentpos[0])==ord(destpos[0]) and currxindex>destxindex ): #backward
+            currxindex-=1 
+            while(currxindex!=destxindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move6!")
+                    return False
+                currxindex-=1
+            return True
+
+        if(curryindex<destyindex and currxindex==destxindex ): #right
+            curryindex+=1
+            while(curryindex!=destyindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move7!")
+                    return False
+                curryindex+=1
+            return True
+
+        if(ord(currentpos[0])>ord(destpos[0]) and currxindex==destxindex ): #left
+            curryindex-=1
+            while(curryindex!=destyindex):
+                if(board[8-currxindex][curryindex].state==False):
+                    print("Path not clear/Invalid move8!")
+                    return False
+                curryindex-=1
+            return True
+
+        return True
+                
+             
 
 
    
@@ -248,7 +478,7 @@ class King(chessPiece):
 
     def checkValidMove(self,currentpos,destpos):
         if(ord(currentpos[0])+1==ord(destpos[0])):       #right diagonal
-                if(int(currentpos[1])+1==int(destpos[1]) or int(currentpos[1])-1==int(destpos[1])):                
+                if(int(currentpos[1])+1==int(destpos[1]) or int(currentpos[1])-1==int(destpos[1])):            
                     return True 
         
         if(ord(currentpos[0])-1==ord(destpos[0])):       #left diagonal
@@ -266,11 +496,17 @@ class King(chessPiece):
             
         return False    #Invalid Move
 
+    def pathClear(self, currentpos, destpos, board, agent):
+        pass
+
+
 
 class Agent:
-    def __init__(self, turn):
+    def __init__(self, turn, colour):
         self.turn=turn #A flag that is true when its Computer's turn
-
+        self.colour=colour
+        self.attacked=0        
+        self.attackedPieces=[]
 
 
 
@@ -278,11 +514,15 @@ board=chessBoard()
 board.initializeBoard()
 board.displayChessBoard()
 
-print("Enter current position and destined position\n")
-currentpos=input()
-destpos=input()
-board.moveChessPiece(currentpos,destpos)
-board.displayChessBoard()
+user=Agent(True, "White")  #We will have two agents, user and chess bot
+chessBot=Agent(False, "Black")
+
+while(1):
+    print("Enter current position and destined position\n")
+    currentpos=input()
+    destpos=input()
+    board.moveChessPiece(currentpos,destpos, user)
+    board.displayChessBoard()
 
 #1. prompt user to enter his move (store moves as well)
 #2. update chessboard
