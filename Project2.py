@@ -8,6 +8,12 @@ CHESSBOARD= np.ndarray((8,8),dtype=object)
 
 class square:
     def __init__(self, identifier, state):
+        #self.boxColour="\033[1;30;47m"
+        self.textStyle="1"      # bold by default
+        self.textColour="33"    # yellow by default
+        self.boxColour="46m"    # white by default
+        
+
         self.identifier=identifier      #Each square has a unique identifier (h3,h4 etc)
         self.state=state    #Tells if a sqaure is empty or not
         self.chesspiece=chessPiece('null','null',0) #what chesspiece is placed on the square if its not empty
@@ -24,7 +30,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         num=8
         for i in range(8):
             st='a'
-            for j in range(8): 
+            for j in range(8):
                 number=str(num)            
                 st=st+number
                 if(num>=7 or num <=2):
@@ -32,6 +38,14 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
                 else:
                     empty=True
                 self.array[i][j] = square(st,empty)
+                
+                #set color of box
+                if i % 2 == 0 and j % 2 != 0:
+                    self.array[i][j].boxColour = "44m" #set dark blue bg, white text
+                elif i % 2 != 0 and j % 2 == 0:
+                    self.array[i][j].boxColour = "44m" #set dark blue bg, white text
+                    
+
                 st=chr(ord(st[0])+1)
             num=num-1
         self.placeChessPieces()
@@ -40,14 +54,14 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
     def placeChessPieces(self):
         
         st="a"
-        for it in range(8):         #Placing White Pawns
+        for it in range(8):         #Placing Black Pawns
             
             st+=str(7)   
             for rows in range(8):
                 for cols in range(8):
                     if self.array[rows][cols].identifier==st:
                         row,column=rows,cols
-                        self.array[row][column].chesspiece=Pawn("white",st)
+                        self.array[row][column].chesspiece=Pawn("black",st)
                         break
                        
                       
@@ -55,7 +69,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
             st=chr(ord(st[0])+1)
 
         st="a"
-        for it in range(8):         #Placing Black Pawns           
+        for it in range(8):         #Placing white Pawns           
             st+=str(2)   
             for rows in range(8):
                 for cols in range(8):
@@ -68,52 +82,52 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
             
             st=chr(ord(st[0])+1)
 
-        st=ord('c')-ord('a')                     #Placing White Bishop(c8,f8)         
-        self.array[0][st].chesspiece=Bishop("white","c8")
+        st=ord('c')-ord('a')                     #Placing black Bishop(c8,f8)         
+        self.array[0][st].chesspiece=Bishop("black","c8")
         st=ord('f')-ord('a')                               
-        self.array[0][st].chesspiece=Bishop("white","f8")
+        self.array[0][st].chesspiece=Bishop("black","f8")
        
 
-        st=ord('c')-ord('a')                     #Placing Black Bishop(c1,f1)            
-        self.array[7][st].chesspiece=Bishop("black","c1")
+        st=ord('c')-ord('a')                     #Placing white Bishop(c1,f1)            
+        self.array[7][st].chesspiece=Bishop("white","c1")
         st=ord('f')-ord('a')                            
-        self.array[7][st].chesspiece=Bishop("black","f1")              
+        self.array[7][st].chesspiece=Bishop("white","f1")              
                       
 
-        st=0                    #Placing White Rook(a8,h8)         
-        self.array[0][st].chesspiece=Rook("white","a8")
+        st=0                    #Placing black Rook(a8,h8)         
+        self.array[0][st].chesspiece=Rook("black","a8")
         st=ord('h')-ord('a')                                
-        self.array[0][st].chesspiece=Rook("white","h8")
+        self.array[0][st].chesspiece=Rook("black","h8")
        
 
-        st=0                    #Placing Black Rook(a1,h1)            
-        self.array[7][st].chesspiece=Rook("black","a1")
+        st=0                    #Placing white Rook(a1,h1)            
+        self.array[7][st].chesspiece=Rook("white","a1")
         st=ord('h')-ord('a')                            
-        self.array[7][st].chesspiece=Rook("black","h1")     
+        self.array[7][st].chesspiece=Rook("white","h1")     
+
+        st=ord('b')-ord('a')                    #Placing black Knight(b8,g8)         
+        self.array[0][st].chesspiece=Knight("black","b8")
+        st=ord('g')-ord('a')                                
+        self.array[0][st].chesspiece=Knight("black","g8")
 
         st=ord('b')-ord('a')                    #Placing White Knight(b8,g8)         
-        self.array[0][st].chesspiece=Knight("white","b8")
+        self.array[7][st].chesspiece=Knight("white","b1")
         st=ord('g')-ord('a')                                
-        self.array[0][st].chesspiece=Knight("white","g8")
-
-        st=ord('b')-ord('a')                    #Placing White Knight(b8,g8)         
-        self.array[7][st].chesspiece=Knight("black","b1")
-        st=ord('g')-ord('a')                                
-        self.array[7][st].chesspiece=Knight("black","g1")
+        self.array[7][st].chesspiece=Knight("white","g1")
 
 
-        st=ord('d')-ord('a')                    #Placing White Queeen(d8)         
-        self.array[0][st].chesspiece=Queen("white","d8")
+        st=ord('d')-ord('a')                    #Placing black Queeen(d8)         
+        self.array[0][st].chesspiece=Queen("black","d8")
 
-        st=ord('e')-ord('a')                    #Placing White King(e8)         
-        self.array[0][st].chesspiece=King("white","e8")
+        st=ord('e')-ord('a')                    #Placing black King(e8)         
+        self.array[0][st].chesspiece=King("black","e8")
 
 
-        st=ord('d')-ord('a')                    #Placing Black Queeen(d1)         
-        self.array[7][st].chesspiece=Queen("black","d1")
+        st=ord('d')-ord('a')                    #Placing white Queeen(d1)         
+        self.array[7][st].chesspiece=Queen("white","d1")
 
-        st=ord('e')-ord('a')                    #Placing Black King(e1)         
-        self.array[7][st].chesspiece=King("black","e1")
+        st=ord('e')-ord('a')                    #Placing white King(e1)         
+        self.array[7][st].chesspiece=King("white","e1")
         
         
     def moveChessPiece(self, current, destination, agent):
@@ -149,9 +163,6 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         print(self.array[row][st].identifier+" is emptied!")
 
 
-
-        
-
     def evaluationFunction():
         pass
 
@@ -159,9 +170,10 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         for i in range(8):
             for j in range(8):
                 if self.array[i][j].state==True:
-                    print(self.array[i][j].identifier, end=" ")
+                    print("\033["+self.array[i][j].textStyle+";"+self.array[i][j].textColour+";"+self.array[i][j].boxColour, self.array[i][j].identifier, end=" ")
                 else:
-                    print(self.array[i][j].chesspiece.name+" ", end=" ")
+                    print("\033["+self.array[i][j].textStyle+";"+self.array[i][j].chesspiece.colourID+";"+self.array[i][j].boxColour, self.array[i][j].chesspiece.name+" ", end=" ")
+                    #print(self.array[i][j].boxColour, self.array[i][j].chesspiece.name+" ", end=" ")
             print("")
     def updateChessBoard():
         pass
@@ -173,6 +185,12 @@ class chessPiece:
         self.colour=colour
         self.position=position
         self.path=[] #Movement path for one turn, is used to check if it is clear or not
+
+        #set colourID
+        if colour == "black":
+            self.colourID = "30"    # dark gray
+        elif colour == "white":
+            self.colourID = "37"    # white
 
     def remove(self):
         self.name="null"
@@ -206,10 +224,6 @@ class Pawn(chessPiece):
     
     def pathClear(self, currentpos, destpos, board, agent):
         pass
-
-    
-
-
 
 
 class Bishop(chessPiece):
@@ -278,7 +292,6 @@ class Bishop(chessPiece):
         return True       
 
 
-
 class Rook(chessPiece):
     def __init__(self, colour, position):
         chessPiece.__init__(self,'♜',colour,position)
@@ -337,7 +350,6 @@ class Rook(chessPiece):
 
         return True
           
-
 
 class Knight(chessPiece):
     def __init__(self, colour, position):
@@ -468,10 +480,7 @@ class Queen(chessPiece):
 
         return True
                 
-             
-
-
-   
+    
 class King(chessPiece):
     def __init__(self, colour, position):
         chessPiece.__init__(self,'♚',colour,position)
@@ -518,7 +527,7 @@ user=Agent(True, "White")  #We will have two agents, user and chess bot
 chessBot=Agent(False, "Black")
 
 while(1):
-    print("Enter current position and destined position\n")
+    print("\033[1;32;40m Enter current position and destined position\n")
     currentpos=input()
     destpos=input()
     board.moveChessPiece(currentpos,destpos, user)
