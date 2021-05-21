@@ -5,7 +5,7 @@ import copy
 CHESSBOARD= np.ndarray((8,8),dtype=object)
 
 class square:
-    def __init__(self, identifier, isOccupied):
+    def __init__(self, identifier, isEmpty):
         #self.boxColour="\033[1;30;47m"
         self.textStyle="1"      # bold by default
         self.textColour="33"    # yellow by default
@@ -13,7 +13,7 @@ class square:
         
 
         self.identifier=identifier                      # Each square has a unique identifier (h3,h4 etc)
-        self.isOccupied=isOccupied                          # False = sqaure is empty, True = sqaure not empty
+        self.isEmpty=isEmpty                          # False = sqaure is empty, True = sqaure not empty
         self.chesspiece=chessPiece('null','null',0)     # what chesspiece is placed on the square if its not empty
 
 class chessBoard: #chessBoard will contain a 2D array of square instances
@@ -133,7 +133,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         if valid==False:
             print("Invalid Move!")
             return 
-        elif self.array[drow][dst].isOccupied==False:
+        elif self.array[drow][dst].isEmpty==False:
             if self.array[drow][dst].chesspiece.colour==agent.colour:
                 print("Invalid Move!")
                 return 
@@ -144,7 +144,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
 
     
 
-        if self.array[drow][dst].isOccupied==False:                                  # if square not empty, ie. there is a piece on it
+        if self.array[drow][dst].isEmpty==False:                                  # if square not empty, ie. there is a piece on it
             if self.array[drow][dst].chesspiece.colour!=agent.colour:               # check if the piece is of opponent
                 agent.attacked+=1
                 agent.attackedPieces.append(self.array[drow][dst].chesspiece)
@@ -152,16 +152,16 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
                 self.array[drow][dst].chesspiece.remove()
 
         self.array[drow][dst].chesspiece=copy.deepcopy(self.array[row][st].chesspiece)
-        self.array[drow][dst].isOccupied=False
+        self.array[drow][dst].isEmpty=False
         self.array[row][st].chesspiece.remove()
-        self.array[row][st].isOccupied=True
+        self.array[row][st].isEmpty=True
         print(self.array[row][st].identifier+" is emptied!")
 
     def evaluationFunction(self):
         strength = 0
         for i in range(8):
             for j in range(8):
-                if self.array[i][j].isOccupied == True:
+                if self.array[i][j].isEmpty == False:
                     strength += self.array[i][j].chesspiece.strength
         return strength
 
@@ -169,7 +169,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         print("Strength: ", self.evaluationFunction())
         for i in range(8):
             for j in range(8):
-                if self.array[i][j].isOccupied==True:
+                if self.array[i][j].isEmpty==True:
                     print("\033["+self.array[i][j].textStyle+";"+self.array[i][j].textColour+";"+self.array[i][j].boxColour, self.array[i][j].identifier, end=" ")
                 else:
                     print("\033["+self.array[i][j].textStyle+";"+self.array[i][j].chesspiece.colourID+";"+self.array[i][j].boxColour, self.array[i][j].chesspiece.name+" ", end=" ")
@@ -259,7 +259,7 @@ class Bishop(chessPiece):
             currxindex+=1
             curryindex+=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
                 currxindex+=1
@@ -270,7 +270,7 @@ class Bishop(chessPiece):
             currxindex-=1
             curryindex+=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
                 currxindex-=1
@@ -282,7 +282,7 @@ class Bishop(chessPiece):
             currxindex+=1
             curryindex-=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
                 currxindex+=1
@@ -293,7 +293,7 @@ class Bishop(chessPiece):
             currxindex+=1
             curryindex-=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
                 currxindex-=1
@@ -327,9 +327,9 @@ class Rook(chessPiece):
         if(ord(currentpos[0])==ord(destpos[0]) and currxindex<destxindex ): #forward
             currxindex+=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
-                    print(currxindex,curryindex, board[8-currxindex][curryindex].isOccupied)
-                    print(destxindex,destyindex, board[8-destxindex][destyindex].isOccupied)
+                if(board[8-currxindex][curryindex].isEmpty==False):
+                    print(currxindex,curryindex, board[8-currxindex][curryindex].isEmpty)
+                    print(destxindex,destyindex, board[8-destxindex][destyindex].isEmpty)
                     print("Path not clear/Invalid move!")
                     return False
                 currxindex+=1
@@ -338,7 +338,7 @@ class Rook(chessPiece):
         if(ord(currentpos[0])==ord(destpos[0]) and currxindex>destxindex ): #backward
             currxindex-=1 
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
                 currxindex-=1
@@ -347,7 +347,7 @@ class Rook(chessPiece):
         if(curryindex<destyindex and currxindex==destxindex ): #right
             curryindex+=1
             while(curryindex!=destyindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
                 curryindex+=1
@@ -355,7 +355,7 @@ class Rook(chessPiece):
         if(ord(currentpos[0])>ord(destpos[0]) and currxindex==destxindex ): #left
             curryindex-=1
             while(curryindex!=destyindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move1!")
                     return False
                 curryindex-=1
@@ -415,7 +415,7 @@ class Queen(chessPiece):
             currxindex+=1
             curryindex+=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move1!")
                     return False
                 currxindex+=1
@@ -426,7 +426,7 @@ class Queen(chessPiece):
             currxindex-=1
             curryindex+=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move2!")
                     return False
                 currxindex-=1
@@ -438,7 +438,7 @@ class Queen(chessPiece):
             currxindex+=1
             curryindex-=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move3!")
                     return False
                 currxindex+=1
@@ -449,7 +449,7 @@ class Queen(chessPiece):
             currxindex+=1
             curryindex-=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move4!")
                     return False
                 currxindex-=1
@@ -459,9 +459,9 @@ class Queen(chessPiece):
         if(ord(currentpos[0])==ord(destpos[0]) and currxindex<destxindex ): #forward
             currxindex+=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
-                    print(currxindex,curryindex, board[8-currxindex][curryindex].isOccupied)
-                    print(destxindex,destyindex, board[8-destxindex][destyindex].isOccupied)
+                if(board[8-currxindex][curryindex].isEmpty==False):
+                    print(currxindex,curryindex, board[8-currxindex][curryindex].isEmpty)
+                    print(destxindex,destyindex, board[8-destxindex][destyindex].isEmpty)
                     print("Path not clear/Invalid move5!")
                     return False
                 currxindex+=1
@@ -470,7 +470,7 @@ class Queen(chessPiece):
         if(ord(currentpos[0])==ord(destpos[0]) and currxindex>destxindex ): #backward
             currxindex-=1 
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move6!")
                     return False
                 currxindex-=1
@@ -479,7 +479,7 @@ class Queen(chessPiece):
         if(curryindex<destyindex and currxindex==destxindex ): #right
             curryindex+=1
             while(curryindex!=destyindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move7!")
                     return False
                 curryindex+=1
@@ -488,7 +488,7 @@ class Queen(chessPiece):
         if(ord(currentpos[0])>ord(destpos[0]) and currxindex==destxindex ): #left
             curryindex-=1
             while(curryindex!=destyindex):
-                if(board[8-currxindex][curryindex].isOccupied==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move8!")
                     return False
                 curryindex-=1
