@@ -2,8 +2,6 @@ import sys
 import numpy as np
 import copy
 
-
-
 CHESSBOARD= np.ndarray((8,8),dtype=object)
 
 pawnTable=[[0,  0,  0,  0,  0,  0,  0,  0],
@@ -54,24 +52,21 @@ queenTable=[[-20,-10,-10, -5, -5,-10,-10,-20],
 
 
 class square:
-    def __init__(self, identifier, state):
+    def __init__(self, identifier, isEmpty):
         #self.boxColour="\033[1;30;47m"
         self.textStyle="1"      # bold by default
         self.textColour="33"    # yellow by default
         self.boxColour="46m"    # white by default
         
 
-        self.identifier=identifier      #Each square has a unique identifier (h3,h4 etc)
-        self.state=state    #Tells if a sqaure is empty or not (False==Not empty)
-        self.chesspiece=chessPiece('null','null',0) #what chesspiece is placed on the square if its not empty
-
-    
+        self.identifier=identifier                      # Each square has a unique identifier (h3,h4 etc)
+        self.isEmpty=isEmpty                          # False = sqaure is empty, True = sqaure not empty
+        self.chesspiece=chessPiece('null','null',0)     # what chesspiece is placed on the square if its not empty
 
 class chessBoard: #chessBoard will contain a 2D array of square instances
 
     def __init__(self):
         self.array = np.ndarray((8,8),dtype=object)
-        
 
     def initializeBoard(self):
         num=8
@@ -176,7 +171,6 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         st=ord('e')-ord('a')                    #Placing white King(e1)         
         self.array[7][st].chesspiece=King("white","e1")
         
-        
     def moveChessPiece(self, current, destination, agent):
         st=ord(current[0])-ord('a')
         row=8-int(current[1])
@@ -186,27 +180,28 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         if valid==False:
             print("Invalid Move!")
             return 
-
-        elif self.array[drow][dst].state==False:
+        elif self.array[drow][dst].isEmpty==False:
             if self.array[drow][dst].chesspiece.colour==agent.colour:
                 print("Invalid Move!")
                 return 
 
         if self.array[row][st].chesspiece.pathClear(current,destination,self.array, agent)==False:
+            print("Path not clear")
             return
 
     
 
-        if self.array[drow][dst].state==False:
-            if self.array[drow][dst].chesspiece.colour!=agent.colour:
+        if self.array[drow][dst].isEmpty==False:                                  # if square not empty, ie. there is a piece on it
+            if self.array[drow][dst].chesspiece.colour!=agent.colour:               # check if the piece is of opponent
                 agent.attacked+=1
                 agent.attackedPieces.append(self.array[drow][dst].chesspiece)
+                agent.score+=self.array[drow][dst].chesspiece.strength
                 self.array[drow][dst].chesspiece.remove()
 
         self.array[drow][dst].chesspiece=copy.deepcopy(self.array[row][st].chesspiece)
-        self.array[drow][dst].state=False
+        self.array[drow][dst].isEmpty=False
         self.array[row][st].chesspiece.remove()
-        self.array[row][st].state=True
+        self.array[row][st].isEmpty=True
         print(self.array[row][st].identifier+" is emptied!")
 
     def countPieces(self, pieceName, colour):
@@ -239,7 +234,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         evaluation=0
         for i in range(8):
             for j in range(8):
-                if (self.array[i][j].state==False):
+                if (self.array[i][j].isEmpty==False):
                     if (self.array[i][j].chessPiece.identifier='p'):
                         evaluation+=pawnTable[i][j]
                     if (self.array[i][j].chessPiece.identifier='k'):
@@ -259,22 +254,34 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         #chesspieces positions evaluation
         return m+e
         
-
-    def displayChessBoard(self):
+  '''  def evaluationFunction(self):
+        strength = 0
         for i in range(8):
             for j in range(8):
-                if self.array[i][j].state==True:
+                if self.array[i][j].isEmpty == False:
+                    strength += self.array[i][j].chesspiece.strength
+        return strength'''
+
+    def displayChessBoard(self):
+        print("Strength: ", self.evaluationFunction())
+        for i in range(8):
+            for j in range(8):
+                if self.array[i][j].isEmpty==True:
                     print("\033["+self.array[i][j].textStyle+";"+self.array[i][j].textColour+";"+self.array[i][j].boxColour, self.array[i][j].identifier, end=" ")
                 else:
                     print("\033["+self.array[i][j].textStyle+";"+self.array[i][j].chesspiece.colourID+";"+self.array[i][j].boxColour, self.array[i][j].chesspiece.name+" ", end=" ")
                     #print(self.array[i][j].boxColour, self.array[i][j].chesspiece.name+" ", end=" ")
             print("")
+    
     def updateChessBoard():
         pass
 
+
+
 class chessPiece:
 
-    def __init__(self, name, colour, position):
+    def __init__(self, name, colour, position, strength=0):
+        self.strength=strength
         self.name=name
         self.colour=colour
         self.position=position
@@ -292,7 +299,11 @@ class chessPiece:
 
 class Pawn(chessPiece):
     def __init__(self, colour, position):
-        chessPiece.__init__(self,'♟',colour,position)
+        if colour == "white":
+            chessPiece.__init__(self,'♟',colour,position,1)
+        elif colour == "black":
+            chessPiece.__init__(self,'♟',colour,position,-1)
+
         self.move=0 #Can take two steps in first move
 
     def checkValidMove(self,currentpos, destpos):
@@ -319,10 +330,12 @@ class Pawn(chessPiece):
     def pathClear(self, currentpos, destpos, board, agent):
         pass
 
-
 class Bishop(chessPiece):
     def __init__(self, colour, position):
-        chessPiece.__init__(self,'♝',colour,position)
+        if colour == "white":
+            chessPiece.__init__(self,'♝',colour,position,3)
+        elif colour == "black":
+            chessPiece.__init__(self,'♝',colour,position,-3)
 
     def checkValidMove(self,currentpos, destpos):
         #Bishop can move diagonally 
@@ -343,7 +356,7 @@ class Bishop(chessPiece):
             currxindex+=1
             curryindex+=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
                 currxindex+=1
@@ -354,7 +367,7 @@ class Bishop(chessPiece):
             currxindex-=1
             curryindex+=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
                 currxindex-=1
@@ -366,7 +379,7 @@ class Bishop(chessPiece):
             currxindex+=1
             curryindex-=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
                 currxindex+=1
@@ -377,7 +390,7 @@ class Bishop(chessPiece):
             currxindex+=1
             curryindex-=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
                 currxindex-=1
@@ -385,10 +398,12 @@ class Bishop(chessPiece):
                 
         return True       
 
-
 class Rook(chessPiece):
     def __init__(self, colour, position):
-        chessPiece.__init__(self,'♜',colour,position)
+        if colour == "white":
+            chessPiece.__init__(self,'♜',colour,position,5)
+        elif colour == "black":
+            chessPiece.__init__(self,'♜',colour,position,-5)
 
     def checkValidMove(self,currentpos, destpos):
 
@@ -409,9 +424,9 @@ class Rook(chessPiece):
         if(ord(currentpos[0])==ord(destpos[0]) and currxindex<destxindex ): #forward
             currxindex+=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].state==False):
-                    print(currxindex,curryindex, board[8-currxindex][curryindex].state)
-                    print(destxindex,destyindex, board[8-destxindex][destyindex].state)
+                if(board[8-currxindex][curryindex].isEmpty==False):
+                    print(currxindex,curryindex, board[8-currxindex][curryindex].isEmpty)
+                    print(destxindex,destyindex, board[8-destxindex][destyindex].isEmpty)
                     print("Path not clear/Invalid move!")
                     return False
                 currxindex+=1
@@ -420,7 +435,7 @@ class Rook(chessPiece):
         if(ord(currentpos[0])==ord(destpos[0]) and currxindex>destxindex ): #backward
             currxindex-=1 
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
                 currxindex-=1
@@ -429,7 +444,7 @@ class Rook(chessPiece):
         if(curryindex<destyindex and currxindex==destxindex ): #right
             curryindex+=1
             while(curryindex!=destyindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
                 curryindex+=1
@@ -437,17 +452,19 @@ class Rook(chessPiece):
         if(ord(currentpos[0])>ord(destpos[0]) and currxindex==destxindex ): #left
             curryindex-=1
             while(curryindex!=destyindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move1!")
                     return False
                 curryindex-=1
 
         return True
           
-
 class Knight(chessPiece):
     def __init__(self, colour, position):
-        chessPiece.__init__(self,'♞',colour,position)
+        if colour == "white":
+            chessPiece.__init__(self,'♞',colour,position,3)
+        elif colour == "black":
+            chessPiece.__init__(self,'♞',colour,position,-3)
 
     def checkValidMove(self,currentpos, destpos):
 
@@ -464,11 +481,13 @@ class Knight(chessPiece):
     def pathClear(self, currentpos, destpos, board, agent):
         pass
 
-
 class Queen(chessPiece):
     def __init__(self, colour, position):
-        chessPiece.__init__(self,'♛',colour,position)
-
+        if colour == "white":
+            chessPiece.__init__(self,'♛',colour,position,9)
+        elif colour == "black":
+            chessPiece.__init__(self,'♛',colour,position,-9)
+        
     def checkValidMove(self,currentpos, destpos):
 
         if(ord(currentpos[0])==ord(destpos[0])):      
@@ -493,7 +512,7 @@ class Queen(chessPiece):
             currxindex+=1
             curryindex+=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move1!")
                     return False
                 currxindex+=1
@@ -504,7 +523,7 @@ class Queen(chessPiece):
             currxindex-=1
             curryindex+=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move2!")
                     return False
                 currxindex-=1
@@ -516,7 +535,7 @@ class Queen(chessPiece):
             currxindex+=1
             curryindex-=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move3!")
                     return False
                 currxindex+=1
@@ -527,7 +546,7 @@ class Queen(chessPiece):
             currxindex+=1
             curryindex-=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move4!")
                     return False
                 currxindex-=1
@@ -537,9 +556,9 @@ class Queen(chessPiece):
         if(ord(currentpos[0])==ord(destpos[0]) and currxindex<destxindex ): #forward
             currxindex+=1
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].state==False):
-                    print(currxindex,curryindex, board[8-currxindex][curryindex].state)
-                    print(destxindex,destyindex, board[8-destxindex][destyindex].state)
+                if(board[8-currxindex][curryindex].isEmpty==False):
+                    print(currxindex,curryindex, board[8-currxindex][curryindex].isEmpty)
+                    print(destxindex,destyindex, board[8-destxindex][destyindex].isEmpty)
                     print("Path not clear/Invalid move5!")
                     return False
                 currxindex+=1
@@ -548,7 +567,7 @@ class Queen(chessPiece):
         if(ord(currentpos[0])==ord(destpos[0]) and currxindex>destxindex ): #backward
             currxindex-=1 
             while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move6!")
                     return False
                 currxindex-=1
@@ -557,7 +576,7 @@ class Queen(chessPiece):
         if(curryindex<destyindex and currxindex==destxindex ): #right
             curryindex+=1
             while(curryindex!=destyindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move7!")
                     return False
                 curryindex+=1
@@ -566,7 +585,7 @@ class Queen(chessPiece):
         if(ord(currentpos[0])>ord(destpos[0]) and currxindex==destxindex ): #left
             curryindex-=1
             while(curryindex!=destyindex):
-                if(board[8-currxindex][curryindex].state==False):
+                if(board[8-currxindex][curryindex].isEmpty==False):
                     print("Path not clear/Invalid move8!")
                     return False
                 curryindex-=1
@@ -574,10 +593,12 @@ class Queen(chessPiece):
 
         return True
                 
-    
 class King(chessPiece):
     def __init__(self, colour, position):
-        chessPiece.__init__(self,'♚',colour,position)
+        if colour == "white":
+            chessPiece.__init__(self,'♚',colour,position,900)
+        elif colour == "black":
+            chessPiece.__init__(self,'♚',colour,position,-900)
 
     def checkValidMove(self,currentpos,destpos):
         if(ord(currentpos[0])+1==ord(destpos[0])):       #right diagonal
@@ -610,6 +631,7 @@ class Agent:
         self.colour=colour
         self.attacked=0        
         self.attackedPieces=[]
+        self.score=0
 
 
 
