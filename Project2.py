@@ -6,6 +6,53 @@ import copy
 
 CHESSBOARD= np.ndarray((8,8),dtype=object)
 
+pawnTable=[[0,  0,  0,  0,  0,  0,  0,  0],
+           [50, 50, 50, 50, 50, 50, 50, 50],
+           [10, 10, 20, 30, 30, 20, 10, 10],
+           [5,  5, 10, 25, 25, 10,  5,  5],
+           [0,  0,  0, 20, 20,  0,  0,  0],
+           [5, -5,-10,  0,  0,-10, -5,  5],
+           [5, 10, 10,-20,-20, 10, 10,  5],
+           [0,  0,  0,  0,  0,  0,  0,  0]]
+
+knightTable=[[-50,-40,-30,-30,-30,-30,-40,-50],
+             [-40,-20,  0,  0,  0,  0,-20,-40],
+             [-30,  0, 10, 15, 15, 10,  0,-30],
+             [-30,  5, 15, 20, 20, 15,  5,-30],
+             [-30,  0, 15, 20, 20, 15,  0,-30],
+             [-30,  5, 10, 15, 15, 10,  5,-30],
+             [-40,-20,  0,  5,  5,  0,-20,-40],
+             [-50,-40,-30,-30,-30,-30,-40,-50]]
+
+bishopTable=[[-20,-10,-10,-10,-10,-10,-10,-20],
+             [-10,  0,  0,  0,  0,  0,  0,-10],
+             [-10,  0,  5, 10, 10,  5,  0,-10],
+             [-10,  5,  5, 10, 10,  5,  5,-10],
+             [-10,  0, 10, 10, 10, 10,  0,-10],
+             [-10, 10, 10, 10, 10, 10, 10,-10],
+             [-10,  5,  0,  0,  0,  0,  5,-10],
+             [-20,-10,-10,-10,-10,-10,-10,-20]]
+
+rookTable=[[0,  0,  0,  0,  0,  0,  0,  0],
+           [5, 10, 10, 10, 10, 10, 10,  5], 
+           [-5,  0,  0,  0,  0,  0,  0, -5],
+           [-5,  0,  0,  0,  0,  0,  0, -5],
+           [-5,  0,  0,  0,  0,  0,  0, -5],
+           [-5,  0,  0,  0,  0,  0,  0, -5],
+           [-5,  0,  0,  0,  0,  0,  0, -5],
+           [0,  0,  0,  5,  5,  0,  0,  0 ]]     
+
+queenTable=[[-20,-10,-10, -5, -5,-10,-10,-20],
+            [-10,  0,  0,  0,  0,  0,  0,-10],
+            [-10,  0,  5,  5,  5,  5,  0,-10],
+            [-5,  0,  5,  5,  5,  5,  0, -5],
+            [0,  0,  5,  5,  5,  5,  0, -5],
+            [-10,  5,  5,  5,  5,  5,  0,-10],
+            [-10,  0,  5,  0,  0,  0,  0,-10],
+            [-20,-10,-10, -5, -5,-10,-10,-20]]    
+
+
+
 class square:
     def __init__(self, identifier, state):
         #self.boxColour="\033[1;30;47m"
@@ -15,7 +62,7 @@ class square:
         
 
         self.identifier=identifier      #Each square has a unique identifier (h3,h4 etc)
-        self.state=state    #Tells if a sqaure is empty or not
+        self.state=state    #Tells if a sqaure is empty or not (False==Not empty)
         self.chesspiece=chessPiece('null','null',0) #what chesspiece is placed on the square if its not empty
 
     
@@ -162,9 +209,56 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         self.array[row][st].state=True
         print(self.array[row][st].identifier+" is emptied!")
 
+    def countPieces(self, pieceName, colour):
+        count=0
+        for i in range(8):
+            for j in range(8):
+                if (self.array[i][j].state==False):
+                    if(self.array[i][j].chessPiece.name==pieceName and self.array[i][j].chessPiece.colour==colour):
+                        count+=1
+        return count               
 
-    def evaluationFunction():
-        pass
+
+    def materialFunction(self):
+        wp = self.countPieces('p',"white")
+        bp = self.countPieces('p',"black")
+        wn = self.countPieces('k',"white")
+        bn = self.countPieces('k',"black")
+        wb = self.countPieces('b',"white")
+        bb = self.countPieces('b',"black")
+        wr = self.countPieces('r',"white")
+        br = self.countPieces('r',"black")
+        wq = self.countPieces('Q',"white")
+        bq = self.countPieces('Q',"black")
+
+        material = 100*(wp-bp)+320*(wn-bn)+330*(wb-bb)+500*(wr-br)+900*(wq-bq)
+
+        return material
+
+    def positionsFunction(self):
+        evaluation=0
+        for i in range(8):
+            for j in range(8):
+                if (self.array[i][j].state==False):
+                    if (self.array[i][j].chessPiece.identifier='p'):
+                        evaluation+=pawnTable[i][j]
+                    if (self.array[i][j].chessPiece.identifier='k'):
+                        evaluation+=knightTable[i][j]
+                    if (self.array[i][j].chessPiece.identifier='b'):
+                        evaluation+=bishopTable[i][j]
+                    if (self.array[i][j].chessPiece.identifier='r'):
+                        evaluation+=rookTable[i][j]
+                    if (self.array[i][j].chessPiece.identifier='Q'):
+                        evaluation+=queenTable[i][j]
+
+        return evaluation
+
+    def evaluationFunction(self):
+        m=self.materialFunction()
+        e=self.positionsFunction()
+        #chesspieces positions evaluation
+        return m+e
+        
 
     def displayChessBoard(self):
         for i in range(8):
