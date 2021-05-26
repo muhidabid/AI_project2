@@ -1,54 +1,9 @@
 import sys
 import numpy as np
 import copy
+import tables
 
 CHESSBOARD= np.ndarray((8,8),dtype=object)
-
-pawnTable=[[0,  0,  0,  0,  0,  0,  0,  0],
-           [50, 50, 50, 50, 50, 50, 50, 50],
-           [10, 10, 20, 30, 30, 20, 10, 10],
-           [5,  5, 10, 25, 25, 10,  5,  5],
-           [0,  0,  0, 20, 20,  0,  0,  0],
-           [5, -5,-10,  0,  0,-10, -5,  5],
-           [5, 10, 10,-20,-20, 10, 10,  5],
-           [0,  0,  0,  0,  0,  0,  0,  0]]
-
-knightTable=[[-50,-40,-30,-30,-30,-30,-40,-50],
-             [-40,-20,  0,  0,  0,  0,-20,-40],
-             [-30,  0, 10, 15, 15, 10,  0,-30],
-             [-30,  5, 15, 20, 20, 15,  5,-30],
-             [-30,  0, 15, 20, 20, 15,  0,-30],
-             [-30,  5, 10, 15, 15, 10,  5,-30],
-             [-40,-20,  0,  5,  5,  0,-20,-40],
-             [-50,-40,-30,-30,-30,-30,-40,-50]]
-
-bishopTable=[[-20,-10,-10,-10,-10,-10,-10,-20],
-             [-10,  0,  0,  0,  0,  0,  0,-10],
-             [-10,  0,  5, 10, 10,  5,  0,-10],
-             [-10,  5,  5, 10, 10,  5,  5,-10],
-             [-10,  0, 10, 10, 10, 10,  0,-10],
-             [-10, 10, 10, 10, 10, 10, 10,-10],
-             [-10,  5,  0,  0,  0,  0,  5,-10],
-             [-20,-10,-10,-10,-10,-10,-10,-20]]
-
-rookTable=[[0,  0,  0,  0,  0,  0,  0,  0],
-           [5, 10, 10, 10, 10, 10, 10,  5], 
-           [-5,  0,  0,  0,  0,  0,  0, -5],
-           [-5,  0,  0,  0,  0,  0,  0, -5],
-           [-5,  0,  0,  0,  0,  0,  0, -5],
-           [-5,  0,  0,  0,  0,  0,  0, -5],
-           [-5,  0,  0,  0,  0,  0,  0, -5],
-           [0,  0,  0,  5,  5,  0,  0,  0 ]]     
-
-queenTable=[[-20,-10,-10, -5, -5,-10,-10,-20],
-            [-10,  0,  0,  0,  0,  0,  0,-10],
-            [-10,  0,  5,  5,  5,  5,  0,-10],
-            [-5,  0,  5,  5,  5,  5,  0, -5],
-            [0,  0,  5,  5,  5,  5,  0, -5],
-            [-10,  5,  5,  5,  5,  5,  0,-10],
-            [-10,  0,  5,  0,  0,  0,  0,-10],
-            [-20,-10,-10, -5, -5,-10,-10,-20]]    
-
 
 
 class square:
@@ -61,7 +16,7 @@ class square:
 
         self.identifier=identifier                      # Each square has a unique identifier (h3,h4 etc)
         self.isEmpty=isEmpty                          # False = sqaure is empty, True = sqaure not empty
-        self.chesspiece=chessPiece('null','null',0)     # what chesspiece is placed on the square if its not empty
+        self.chessPiece=chessPiece('null','null',0)     # what chesspiece is placed on the square if its not empty
 
 class chessBoard: #chessBoard will contain a 2D array of square instances
 
@@ -204,7 +159,9 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         self.array[row][st].isEmpty=True
         print(self.array[row][st].identifier+" is emptied!")
 
-    def countPieces(self, pieceName, colour):
+
+
+    """ def countPieces(self, pieceName, colour):
         count=0
         for i in range(8):
             for j in range(8):
@@ -228,42 +185,46 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
 
         material = 100*(wp-bp)+320*(wn-bn)+330*(wb-bb)+500*(wr-br)+900*(wq-bq)
 
-        return material
+        return material """
+
 
     def positionsFunction(self):
         evaluation=0
         for i in range(8):
             for j in range(8):
                 if (self.array[i][j].isEmpty==False):
-                    if (self.array[i][j].chessPiece.identifier='p'):
-                        evaluation+=pawnTable[i][j]
-                    if (self.array[i][j].chessPiece.identifier='k'):
-                        evaluation+=knightTable[i][j]
-                    if (self.array[i][j].chessPiece.identifier='b'):
-                        evaluation+=bishopTable[i][j]
-                    if (self.array[i][j].chessPiece.identifier='r'):
-                        evaluation+=rookTable[i][j]
-                    if (self.array[i][j].chessPiece.identifier='Q'):
-                        evaluation+=queenTable[i][j]
-
+                    tempChessPiece = self.array[i][j].chessPiece
+                    if tempChessPiece.name == '♟':
+                        print("--pawn--")
+                        evaluation += tables.pawnEvalWhite[i][j] if tempChessPiece.color == 'white' else tables.pawnEvalBlack[i][j]
+                    elif tempChessPiece.name == '♝':
+                        evaluation += tables.bishopEvalWhite[i][j] if tempChessPiece.color == 'white' else tables.bishopEvalBlack[i][j]
+                    elif tempChessPiece.name == '♜':
+                        evaluation += tables.rookEvalWhite[i][j] if tempChessPiece.color == 'white' else tables.rookEvalBlack[i][j]
+                    elif tempChessPiece.name == '♞':
+                        evaluation += tables.knightEval[i][j]
+                    elif tempChessPiece.name == '♛':
+                        evaluation += tables.evalQueen[i][j]
+                    elif tempChessPiece.name == '♚':
+                        evaluation += tables.KingWhiteEndgame[i][j] if tempChessPiece.color == 'white' else tables.KingBlackEndgame[i][j]
+                        #---------IMPLEMENT KING'S ENDGAME TABLE AND SCORE HERE-------#
         return evaluation
 
+
+    def materialFunction(self):
+            strength = 0
+            for i in range(8):
+                for j in range(8):
+                    if self.array[i][j].isEmpty == False:
+                        strength += self.array[i][j].chesspiece.strength
+            return strength
+
     def evaluationFunction(self):
-        m=self.materialFunction()
-        e=self.positionsFunction()
-        #chesspieces positions evaluation
-        return m+e
+        return self.materialFunction()+self.positionsFunction()
         
-  '''  def evaluationFunction(self):
-        strength = 0
-        for i in range(8):
-            for j in range(8):
-                if self.array[i][j].isEmpty == False:
-                    strength += self.array[i][j].chesspiece.strength
-        return strength'''
 
     def displayChessBoard(self):
-        print("Strength: ", self.evaluationFunction())
+        print("Evaluation: ", self.evaluationFunction())
         for i in range(8):
             for j in range(8):
                 if self.array[i][j].isEmpty==True:
@@ -300,9 +261,9 @@ class chessPiece:
 class Pawn(chessPiece):
     def __init__(self, colour, position):
         if colour == "white":
-            chessPiece.__init__(self,'♟',colour,position,1)
+            chessPiece.__init__(self,'♟',colour,position,10)
         elif colour == "black":
-            chessPiece.__init__(self,'♟',colour,position,-1)
+            chessPiece.__init__(self,'♟',colour,position,-10)
 
         self.move=0 #Can take two steps in first move
 
@@ -333,9 +294,9 @@ class Pawn(chessPiece):
 class Bishop(chessPiece):
     def __init__(self, colour, position):
         if colour == "white":
-            chessPiece.__init__(self,'♝',colour,position,3)
+            chessPiece.__init__(self,'♝',colour,position,30)
         elif colour == "black":
-            chessPiece.__init__(self,'♝',colour,position,-3)
+            chessPiece.__init__(self,'♝',colour,position,-30)
 
     def checkValidMove(self,currentpos, destpos):
         #Bishop can move diagonally 
@@ -401,9 +362,9 @@ class Bishop(chessPiece):
 class Rook(chessPiece):
     def __init__(self, colour, position):
         if colour == "white":
-            chessPiece.__init__(self,'♜',colour,position,5)
+            chessPiece.__init__(self,'♜',colour,position,50)
         elif colour == "black":
-            chessPiece.__init__(self,'♜',colour,position,-5)
+            chessPiece.__init__(self,'♜',colour,position,-50)
 
     def checkValidMove(self,currentpos, destpos):
 
@@ -462,9 +423,9 @@ class Rook(chessPiece):
 class Knight(chessPiece):
     def __init__(self, colour, position):
         if colour == "white":
-            chessPiece.__init__(self,'♞',colour,position,3)
+            chessPiece.__init__(self,'♞',colour,position,30)
         elif colour == "black":
-            chessPiece.__init__(self,'♞',colour,position,-3)
+            chessPiece.__init__(self,'♞',colour,position,-30)
 
     def checkValidMove(self,currentpos, destpos):
 
@@ -484,9 +445,9 @@ class Knight(chessPiece):
 class Queen(chessPiece):
     def __init__(self, colour, position):
         if colour == "white":
-            chessPiece.__init__(self,'♛',colour,position,9)
+            chessPiece.__init__(self,'♛',colour,position,90)
         elif colour == "black":
-            chessPiece.__init__(self,'♛',colour,position,-9)
+            chessPiece.__init__(self,'♛',colour,position,-90)
         
     def checkValidMove(self,currentpos, destpos):
 
