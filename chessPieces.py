@@ -1,3 +1,6 @@
+from typing import Collection
+
+
 class chessPiece:
 
     def __init__(self, name, symbol, colour, position, strength=0):
@@ -29,29 +32,100 @@ class Pawn(chessPiece):
         chessPiece.__init__(self,'pawn','♟',colour,position,10)
         self.move=0 #Can take two steps in first move
 
-    def checkValidMove(self,currentpos, destpos):
+    def checkValidMove(self, cRow, cCol, dRow, dCol, board, colour):#self,currentpos,destpos,colour=None):
         #Pawn can move only forward and diagonally(if opponent gets attacked)
-        destxindex=int(destpos[1])
-        destyindex=ord(destpos[0])
-        if(ord(currentpos[0])+1==ord(destpos[0])):       #right diagonal
-            if(int(currentpos[1])+1==int(destpos[1])):   
-                    return True 
-    
-        if(ord(currentpos[0])-1==ord(destpos[0])):       #left diagonal
-            if(int(currentpos[1])+1==int(destpos[1])):
-                    return True 
         
-        if(ord(currentpos[0])==ord(destpos[0])): #forward
-            if(int(currentpos[1])+1==int(destpos[1])):
+        """ if colour == 'white':
+            if(ord(currentpos[0])+1==ord(destpos[0])):       #right diagonal
+                if(int(currentpos[1])+1==int(destpos[1])):   
                     return True 
-        
 
+            if(ord(currentpos[0])-1==ord(destpos[0])):       #left diagonal
+                if(int(currentpos[1])+1==int(destpos[1])):
+                    return True 
+
+            if(ord(currentpos[0])==ord(destpos[0])): #forward
+                if(int(currentpos[1])+1==int(destpos[1])):
+                    return True 
+        
+        if colour == 'black':
+            if(ord(currentpos[0])+1==ord(destpos[0])):       #right diagonal
+                if(int(currentpos[1])-1==int(destpos[1])):   
+                    return True 
+
+            if(ord(currentpos[0])-1==ord(destpos[0])):       #left diagonal
+                if(int(currentpos[1])-1==int(destpos[1])):
+                    return True 
+
+            if(ord(currentpos[0])==ord(destpos[0])): #forward
+                if(int(currentpos[1])-1==int(destpos[1])):
+                    return True  """
+
+        """ if self.colour == 'white':
+                    if cRow == 6:                                   # first time moving pawn
+                        if cRow-1 == dRow and cCol == dCol:         # 1 forward
+                            return True
+                        if cRow-2 == dRow and cCol == dCol:         # 2 forward
+                            return True
+                    if cRow-1 == dRow and cCol == dCol:         # forward
+                        return True
+                    elif cCol+1 == dCol and cRow-1 == dRow:     # right diagonal
+                        return True
+                    elif cCol-1 == dCol and cRow-1 == dRow:     # left diagonal
+                        return True
+                elif self.colour == 'black':
+                    if cRow == 1:                                   # first time moving pawn
+                        if cRow+1 == dRow and cCol == dCol:         # 1 forward
+                            return True
+                        if cRow+2 == dRow and cCol == dCol:         # 2 forward
+                            return True
+                    if cRow+1 == dRow and cCol == dCol:         # forward
+                        return True
+                    elif cCol+1 == dCol and cRow+1 == dRow:     # right diagonal
+                        return True
+                    elif cCol-1 == dCol and cRow+1 == dRow:     # left diagonal
+                        return True """
+        
+        if self.pathClear(cRow, cCol, dRow, dCol, board, colour) and self.ifAttackCheckValid(dRow,dCol,board,colour):
+            if colour == 'white':
+                if cRow == 6:                                   # first time moving pawn
+                    if cRow-1 == dRow and cCol == dCol:         # 1 forward
+                        if self.ifAttackCheckValid(dRow,dCol,board,colour): return True
+                    if cRow-2 == dRow and cCol == dCol:         # 2 forward
+                        if self.ifAttackCheckValid(dRow,dCol,board,colour): return True
+
+                if cRow-1 == dRow and cCol == dCol:         # forward
+                    if self.ifAttackCheckValid(dRow,dCol,board,colour): return True
+                elif cCol+1 == dCol and cRow-1 == dRow:     # right diagonal
+                    if self.ifAttackCheckValid(dRow,dCol,board,colour): return True
+                elif cCol-1 == dCol and cRow-1 == dRow:     # left diagonal
+                    if self.ifAttackCheckValid(dRow,dCol,board,colour): return True
+            elif colour == 'black':
+                if cRow == 1:                                   # first time moving pawn
+                    if cRow+1 == dRow and cCol == dCol:         # 1 forward
+                        if self.ifAttackCheckValid(dRow,dCol,board,colour): return True
+                    if cRow+2 == dRow and cCol == dCol:         # 2 forward
+                        if self.ifAttackCheckValid(dRow,dCol,board,colour): return True
+
+                if cRow+1 == dRow and cCol == dCol:         # forward
+                    if self.ifAttackCheckValid(dRow,dCol,board,colour): return True
+                elif cCol+1 == dCol and cRow+1 == dRow:     # right diagonal
+                    if self.ifAttackCheckValid(dRow,dCol,board,colour): return True
+                elif cCol-1 == dCol and cRow+1 == dRow:     # left diagonal
+                    if self.ifAttackCheckValid(dRow,dCol,board,colour): return True
+        else:print("Path not clear")        
         return False    #Invalid Move
 
-        
+    def ifAttackCheckValid(self,dRow,dCol,board,colour):
+        if board[dRow][dCol].isEmpty:
+            return True             # square empty so valid attack
+        elif board[dRow][dCol].chessPiece.colour != colour:
+            return True             # square not empty and attackable
+        print('Invalid colour on destination')
+        return False                # same colour piece so invalid
     
-    def pathClear(self, currentpos, destpos, board, agent):
-        pass
+    def pathClear(self, cRow, cCol, dRow, dCol, board, colour):
+        return True
 
 class Bishop(chessPiece):
     def __init__(self, colour, position):
@@ -62,67 +136,74 @@ class Bishop(chessPiece):
         chessPiece.__init__(self,'bishop','♝',colour,position,30)
         
 
-    def checkValidMove(self,currentpos, destpos):
+    def checkValidMove(self, cRow, cCol, dRow, dCol, board, colour):
         #Bishop can move diagonally 
- 
-        if(abs(ord(currentpos[0])-ord(destpos[0])) == abs(int(currentpos[1])-int(destpos[1]))):                    
-            return True
-        
-
+        #if(abs(ord(currentpos[0])-ord(destpos[0])) == abs(int(currentpos[1])-int(destpos[1]))):                    
+        if self.pathClear(cRow, cCol, dRow, dCol, board, colour) and self.ifAttackCheckValid(dRow,dCol,board,colour):
+            if cRow-dRow == cCol-dCol:return True
+        else:print("Path not clear")
         return False
 
-    def pathClear(self, currentpos, destpos, board, agent):
-        currxindex=int(currentpos[1])
-        curryindex=ord(currentpos[0])-ord('a')
-        destxindex=int(destpos[1])
-        destyindex=ord(destpos[0])-ord('a')
+    def pathClear(self, cRow, cCol, dRow, dCol, board, colour):
+        """ cRow=int(currentpos[1])
+        cCol=ord(currentpos[0])-ord('a')
+        dRow=int(destpos[1])
+        dCol=ord(destpos[0])-ord('a') """
 
-        if(destxindex>currxindex and destyindex>curryindex):  #upper right diagonal
-            currxindex+=1
-            curryindex+=1
-            while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if(dRow>cRow and dCol>cCol):  #upper right diagonal
+            cRow+=1
+            cCol+=1
+            while(cRow!=dRow):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
-                currxindex+=1
-                curryindex+=1
+                cRow+=1
+                cCol+=1
 
 
-        if(destxindex<currxindex and destyindex>curryindex):  #lower right diagonal
-            currxindex-=1
-            curryindex+=1
-            while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if(dRow<cRow and dCol>cCol):  #lower right diagonal
+            cRow-=1
+            cCol+=1
+            while(cRow!=dRow):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
-                currxindex-=1
-                curryindex+=1
+                cRow-=1
+                cCol+=1
 
 
 
-        if(destxindex>currxindex and destyindex<curryindex):  #upper left diagonal
-            currxindex+=1
-            curryindex-=1
-            while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if(dRow>cRow and dCol<cCol):  #upper left diagonal
+            cRow+=1
+            cCol-=1
+            while(cRow!=dRow):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
-                currxindex+=1
-                curryindex-=1
+                cRow+=1
+                cCol-=1
 
 
-        if(destxindex<currxindex and destyindex<curryindex):  #lower left diagonal
-            currxindex+=1
-            curryindex-=1
-            while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if(dRow<cRow and dCol<cCol):  #lower left diagonal
+            cRow+=1
+            cCol-=1
+            while(cRow!=dRow):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
-                currxindex-=1
-                curryindex-=1
+                cRow-=1
+                cCol-=1
                 
         return True       
 
+    def ifAttackCheckValid(self,dRow,dCol,board,colour):
+        if board[dRow][dCol].isEmpty:
+            return True             # square empty so valid attack
+        elif board[dRow][dCol].chessPiece.colour != colour:
+            return True             # square not empty and attackable
+        print('Invalid colour on destination')
+        return False                # same colour piece so invalid
+        
 class Rook(chessPiece):
     def __init__(self, colour, position):
         """ if colour == "white":
@@ -131,60 +212,70 @@ class Rook(chessPiece):
             chessPiece.__init__(self,'rook','♜',colour,position,-50)"""
         chessPiece.__init__(self,'rook','♜',colour,position,50)
 
-    def checkValidMove(self,currentpos, destpos):
+    def checkValidMove(self, cRow, cCol, dRow, dCol, board, colour):
 
-        if(ord(currentpos[0])==ord(destpos[0])):      
+        """ if(ord(currentpos[0])==ord(destpos[0])):
             return True
         if(int(currentpos[1])==int(destpos[1])):                
-            return True
-    
+            return True """
+        if self.pathClear(cRow, cCol, dRow, dCol, board, colour) and self.ifAttackCheckValid(dRow,dCol,board,colour):
+            if cRow == dRow or cCol == dCol:return True
         return False
 
 
-    def pathClear(self, currentpos, destpos, board, agent):
-        currxindex=int(currentpos[1])
-        curryindex=ord(currentpos[0])-ord('a')
-        destxindex=int(destpos[1])
-        destyindex=ord(destpos[0])-ord('a')
+    def pathClear(self, cRow, cCol, dRow, dCol, board, colour):
+        """ cRow=int(currentpos[1])
+        cCol=ord(currentpos[0])-ord('a')
+        dRow=int(destpos[1])
+        dCol=ord(destpos[0])-ord('a') """
 
-        if(ord(currentpos[0])==ord(destpos[0]) and currxindex<destxindex ): #forward
-            currxindex+=1
-            while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
-                    print(currxindex,curryindex, board[8-currxindex][curryindex].isEmpty)
-                    print(destxindex,destyindex, board[8-destxindex][destyindex].isEmpty)
+        #if(ord(currentpos[0])==ord(destpos[0]) and cRow<dRow ): #forward
+        if cCol==dCol and cRow<dRow: #forward
+            cRow+=1
+            while(cRow!=dRow):
+                if(board[7-cRow][cCol].isEmpty==False):
+                    print(cRow,cCol, board[7-cRow][cCol].isEmpty)
+                    print(dRow,dCol, board[7-dRow][dCol].isEmpty)
                     print("Path not clear/Invalid move!")
                     return False
-                currxindex+=1
+                cRow+=1
                 
 
-        if(ord(currentpos[0])==ord(destpos[0]) and currxindex>destxindex ): #backward
-            currxindex-=1 
-            while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if cCol==dCol and cRow>dRow: #backward
+            cRow-=1 
+            while(cRow!=dRow):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
-                currxindex-=1
+                cRow-=1
 
 
-        if(curryindex<destyindex and currxindex==destxindex ): #right
-            curryindex+=1
-            while(curryindex!=destyindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if cCol<dCol and cRow==dRow: #right
+            cCol+=1
+            while(cCol!=dCol):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move!")
                     return False
-                curryindex+=1
+                cCol+=1
 
-        if(ord(currentpos[0])>ord(destpos[0]) and currxindex==destxindex ): #left
-            curryindex-=1
-            while(curryindex!=destyindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if cCol>dCol and cRow==dRow: #left
+            cCol-=1
+            while(cCol!=dCol):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move1!")
                     return False
-                curryindex-=1
+                cCol-=1
 
         return True
-          
+
+    def ifAttackCheckValid(self,dRow,dCol,board,colour):
+        if board[dRow][dCol].isEmpty:
+            return True             # square empty so valid attack
+        elif board[dRow][dCol].chessPiece.colour != colour:
+            return True             # square not empty and attackable
+        print('Invalid colour on destination')
+        return False                # same colour piece so invalid
+
 class Knight(chessPiece):
     def __init__(self, colour, position):
         """ if colour == "white":
@@ -192,20 +283,38 @@ class Knight(chessPiece):
         elif colour == "black":
             chessPiece.__init__(self,'knight','♞',colour,position,-30)"""
         chessPiece.__init__(self,'knight','♞',colour,position,30)
-    def checkValidMove(self,currentpos, destpos):
+    def checkValidMove(self, cRow, cCol, dRow, dCol, board, colour):
 
-        if(ord(currentpos[0])+1==ord(destpos[0])):       
+        """ if(ord(currentpos[0])+1==ord(destpos[0])):       
             if(int(currentpos[1])+2==int(destpos[1]) or int(currentpos[1])-2==int(destpos[1]) ):                
-                return True 
-    
+                return True
         if(ord(currentpos[0])-1==ord(destpos[0])):       
             if(int(currentpos[1])+2==int(destpos[1]) or int(currentpos[1])-2==int(destpos[1]) ):                
-                return True  
-    
+                return True   """
+
+        if self.pathClear(cRow, cCol, dRow, dCol, board, colour) and self.ifAttackCheckValid(dRow,dCol,board,colour):
+            if cRow-2 ==dRow and cCol+1 ==dCol:return True
+            if cRow-1 ==dRow and cCol+2 ==dCol:return True
+            if cRow+1 ==dRow and cCol+2 ==dCol:return True
+            if cRow+2 ==dRow and cCol+1 ==dCol:return True
+            # left half of moves
+            if cRow+2 ==dRow and cCol-1 ==dCol:return True
+            if cRow+1 ==dRow and cCol-2 ==dCol:return True
+            if cRow-1 ==dRow and cCol-2 ==dCol:return True
+            if cRow-2 ==dRow and cCol-1 ==dCol:return True
+        else:print("Path not clear")        
         return False    #Invalid Move
     
-    def pathClear(self, currentpos, destpos, board, agent):
-        pass
+    def pathClear(self, cRow, cCol, dRow, dCol, board, colour):
+        return True
+
+    def ifAttackCheckValid(self,dRow,dCol,board,colour):
+        if board[dRow][dCol].isEmpty:
+            return True             # square empty so valid attack
+        elif board[dRow][dCol].chessPiece.colour != colour:
+            return True             # square not empty and attackable
+        print('Invalid colour on destination')
+        return False                # same colour piece so invalid
 
 class Queen(chessPiece):
     def __init__(self, colour, position):
@@ -215,110 +324,121 @@ class Queen(chessPiece):
             chessPiece.__init__(self,'queen','♛',colour,position,-90) """
         chessPiece.__init__(self,'queen','♛',colour,position,90)
 
-    def checkValidMove(self,currentpos, destpos):
+    def checkValidMove(self, cRow, cCol, dRow, dCol, board, colour):
 
-        if(ord(currentpos[0])==ord(destpos[0])):      
+        """ if(ord(currentpos[0])==ord(destpos[0])):      
             return True
         if(int(currentpos[1])==int(destpos[1])):                
             return True
         if(abs(ord(currentpos[0])-ord(destpos[0])) == abs(int(currentpos[1])-int(destpos[1]))):                    
-            return True
-
-
+            return True """
+        if self.pathClear(cRow, cCol, dRow, dCol, board, colour) and self.ifAttackCheckValid(dRow,dCol,board,colour):
+            if cRow==dRow:return True
+            if cCol==dCol:return True
+            if cRow-dRow == cCol-dCol:return True
+        else:print("Path not clear")
         return False
 
-    def pathClear(self, currentpos, destpos, board, agent):
-        currxindex=int(currentpos[1])
-        curryindex=ord(currentpos[0])-ord('a')
-        destxindex=int(destpos[1])
-        destyindex=ord(destpos[0])-ord('a')
+    def pathClear(self, cRow, cCol, dRow, dCol, board, colour):
+        """ cRow=int(currentpos[1])
+        cCol=ord(currentpos[0])-ord('a')
+        dRow=int(destpos[1])
+        dCol=ord(destpos[0])-ord('a') """
 
         
 
-        if(destxindex>currxindex and destyindex>curryindex):  #upper right diagonal
-            currxindex+=1
-            curryindex+=1
-            while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if(dRow>cRow and dCol>cCol):  #upper right diagonal
+            cRow+=1
+            cCol+=1
+            while(cRow!=dRow):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move1!")
                     return False
-                currxindex+=1
-                curryindex+=1
+                cRow+=1
+                cCol+=1
             return True
 
-        if(destxindex<currxindex and destyindex>curryindex):  #lower right diagonal
-            currxindex-=1
-            curryindex+=1
-            while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if(dRow<cRow and dCol>cCol):  #lower right diagonal
+            cRow-=1
+            cCol+=1
+            while(cRow!=dRow):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move2!")
                     return False
-                currxindex-=1
-                curryindex+=1
+                cRow-=1
+                cCol+=1
             return True
 
 
-        if(destxindex>currxindex and destyindex<curryindex):  #upper left diagonal
-            currxindex+=1
-            curryindex-=1
-            while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if(dRow>cRow and dCol<cCol):  #upper left diagonal
+            cRow+=1
+            cCol-=1
+            while(cRow!=dRow):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move3!")
                     return False
-                currxindex+=1
-                curryindex-=1
+                cRow+=1
+                cCol-=1
             return True
 
-        if(destxindex<currxindex and destyindex<curryindex):  #lower left diagonal
-            currxindex+=1
-            curryindex-=1
-            while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if(dRow<cRow and dCol<cCol):  #lower left diagonal
+            cRow+=1
+            cCol-=1
+            while(cRow!=dRow):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move4!")
                     return False
-                currxindex-=1
-                curryindex-=1
+                cRow-=1
+                cCol-=1
             return True
 
-        if(ord(currentpos[0])==ord(destpos[0]) and currxindex<destxindex ): #forward
-            currxindex+=1
-            while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
-                    print(currxindex,curryindex, board[8-currxindex][curryindex].isEmpty)
-                    print(destxindex,destyindex, board[8-destxindex][destyindex].isEmpty)
+        if cCol==dCol and cRow<dRow: #forward
+            cRow+=1
+            while(cRow!=dRow):
+                if(board[7-cRow][cCol].isEmpty==False):
+                    print(cRow,cCol, board[7-cRow][cCol].isEmpty)
+                    print(dRow,dCol, board[7-dRow][dCol].isEmpty)
                     print("Path not clear/Invalid move5!")
                     return False
-                currxindex+=1
+                cRow+=1
             return True   
 
-        if(ord(currentpos[0])==ord(destpos[0]) and currxindex>destxindex ): #backward
-            currxindex-=1 
-            while(currxindex!=destxindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if cCol==dCol and cRow>dRow: #backward
+            cRow-=1 
+            while(cRow!=dRow):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move6!")
                     return False
-                currxindex-=1
+                cRow-=1
             return True
 
-        if(curryindex<destyindex and currxindex==destxindex ): #right
-            curryindex+=1
-            while(curryindex!=destyindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
+        if(cCol<dCol and cRow==dRow ): #right
+            cCol+=1
+            while(cCol!=dCol):
+                if(board[7-cRow][cCol].isEmpty==False):
                     print("Path not clear/Invalid move7!")
                     return False
-                curryindex+=1
+                cCol+=1
             return True
 
-        if(ord(currentpos[0])>ord(destpos[0]) and currxindex==destxindex ): #left
-            curryindex-=1
-            while(curryindex!=destyindex):
-                if(board[8-currxindex][curryindex].isEmpty==False):
-                    print("Path not clear/Invalid move8!")
+        if cCol>dCol and cRow==dRow: #left
+            cCol-=1
+            while(cCol!=dCol):
+                if(board[7-cRow][cCol].isEmpty==False):
+                    print("Path not clear/Invalid move!")
                     return False
-                curryindex-=1
+                cCol-=1
             return True
 
         return True
+
+    def ifAttackCheckValid(self,dRow,dCol,board,colour):
+        if board[dRow][dCol].isEmpty:
+            return True             # square empty so valid attack
+        elif board[dRow][dCol].chessPiece.colour != colour:
+            return True             # square not empty and attackable
+        print('Invalid colour on destination')
+        return False                # same colour piece so invalid
                 
 class King(chessPiece):
     def __init__(self, colour, position):
@@ -328,8 +448,8 @@ class King(chessPiece):
             chessPiece.__init__(self,'king','♚',colour,position,-900) """
         chessPiece.__init__(self,'king','♚',colour,position,900)
 
-    def checkValidMove(self,currentpos,destpos):
-        if(ord(currentpos[0])+1==ord(destpos[0])):       #right diagonal
+    def checkValidMove(self, cRow, cCol, dRow, dCol, board, colour):
+        """ if(ord(currentpos[0])+1==ord(destpos[0])):       #right diagonal
                 if(int(currentpos[1])+1==int(destpos[1]) or int(currentpos[1])-1==int(destpos[1])):            
                     return True 
         
@@ -343,10 +463,27 @@ class King(chessPiece):
             
         if(int(currentpos[1])==int(destpos[1])): #sideways
             if(ord(currentpos[0])-1==ord(destpos[0]) or ord(currentpos[0])+1==ord(destpos[0])):
-                return True
-            
-            
+                return True """
+
+        if self.pathClear(cRow, cCol, dRow, dCol, board, colour) and self.ifAttackCheckValid(dRow,dCol,board,colour):    
+            if cCol+1==dCol:    #right diagonal
+                if cRow+1==dRow or cRow-1==dRow:return True
+            if cCol-1==dCol:    #left diagonal
+                if cRow+1==dRow or cRow-1==dRow:return True
+            if cCol==dCol:      #forward/backward
+                if cRow+1==dRow or cRow-1==dRow:return True
+            if cRow==dRow:      #sideways
+                if cCol-1==dCol or cCol+1==dCol:return True
+        else:print("Path not clear")        
         return False    #Invalid Move
 
-    def pathClear(self, currentpos, destpos, board, agent):
-        pass
+    def pathClear(self, cRow, cCol, dRow, dCol, board, colour):
+        return True
+    
+    def ifAttackCheckValid(self,dRow,dCol,board,colour):
+        if board[dRow][dCol].isEmpty:
+            return True             # square empty so valid attack
+        elif board[dRow][dCol].chessPiece.colour != colour:
+            return True             # square not empty and attackable
+        print('Invalid colour on destination')
+        return False                # same colour piece so invalid

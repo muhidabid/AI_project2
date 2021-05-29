@@ -12,21 +12,23 @@ class Agent:
         self.attackedPieces=[]
         self.score=0
 
-
-
-board=chessBoard()
-board.initializeBoard()
-board.displayChessBoard()
-
-user=Agent(True, "White")  #We will have two agents, user and chess bot
-chessBot=Agent(False, "Black")
-
-while(1):
-    print("\033[1;32;40m Enter current position and destined position\n")
-    currentpos=input()
-    destpos=input()
-    board.moveChessPiece(currentpos,destpos, user)
+def game(user, chessBot):
+    board=chessBoard()
+    board.initializeBoard()
     board.displayChessBoard()
+
+    while 1:
+        print("\033[1;32;40m Enter current position and destined position\n")
+        currentpos=input()
+        destpos=input()
+        board.moveChessPiece(currentpos,destpos, user)
+        board.randomMoveChessPiece(chessBot)
+        board.displayChessBoard()
+
+user=Agent(True, "white")  #We will have two agents, user and chess bot
+chessBot=Agent(False, "black")
+
+game(user, chessBot)
 
 #1. prompt user to enter his move (store moves as well)
 #2. update chessboard

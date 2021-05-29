@@ -1,13 +1,10 @@
 import numpy as np
 import copy
+import random
 
 import tables
-from  chessPieces import *
-""" from  chessPieces import Bishop
-from  chessPieces import Rook
-from  chessPieces import Knight
-from  chessPieces import Queen
-from  chessPieces import King """
+from chessPieces import *
+from generateMoves import *
 
 class square:
     def __init__(self, identifier, isEmpty):
@@ -19,8 +16,9 @@ class square:
 
         self.identifier=identifier                      # Each square has a unique identifier (h3,h4 etc)
         self.isEmpty=isEmpty                          # False = sqaure is empty, True = sqaure not empty
-        #self.chessPiece=chessPiece('null','null','null',0)     # what chessPiece is placed on the square if its not empty
-        self.chessPiece = ''
+        self.chessPiece=chessPiece('null','null','null',0)     # what chessPiece is placed on the square if its not empty
+        #self.chessPiece = ''
+
 
 class chessBoard: #chessBoard will contain a 2D array of square instances
 
@@ -132,39 +130,65 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         self.array[7][st].chessPiece=King("white","e1")
         
     def moveChessPiece(self, current, destination, agent):
-        st=ord(current[0])-ord('a')
-        row=8-int(current[1])
-        dst=ord(destination[0])-ord('a')
-        drow=8-int(destination[1])
-        valid=self.array[row][st].chessPiece.checkValidMove(current,destination)
-        if valid==False:
-            print("Invalid Move!")
-            return 
-        elif self.array[drow][dst].isEmpty==False:
-            if self.array[drow][dst].chessPiece.colour==agent.colour:
-                print("Invalid Move!")
-                return 
+        cCol=ord(current[0])-ord('a')
+        cRow=8-int(current[1])
+        dCol=ord(destination[0])-ord('a')
+        dRow=8-int(destination[1])
 
-        if self.array[row][st].chessPiece.pathClear(current,destination,self.array, agent)==False:
+        if not self.array[cRow][cCol].chessPiece.checkValidMove(cRow, cCol, dRow, dCol, self.array, agent.colour):
+            print("Invalid Move! checkValidMove is False")
+            return False
+        """ elif self.array[dRow][dCol].isEmpty==False:
+            if self.array[dRow][dCol].chessPiece.colour==agent.colour:
+                print("Invalid Move! Same colour at destination")
+                return False """
+
+        """ if self.array[cRow][cCol].chessPiece.pathClear(cRow, cCol, dRow, dCol, self.array, agent.colour)==False:
             print("Path not clear")
-            return
+            return False """
 
-    
-
-        if self.array[drow][dst].isEmpty==False:                                  # if square not empty, ie. there is a piece on it
-            if self.array[drow][dst].chessPiece.colour!=agent.colour:               # check if the piece is of opponent
+        if self.array[dRow][dCol].isEmpty==False:                                  # if square not empty, ie. there is a piece on it
+            if self.array[dRow][dCol].chessPiece.colour!=agent.colour:               # check if the piece is of opponent
                 agent.attacked+=1
-                agent.attackedPieces.append(self.array[drow][dst].chessPiece)
-                agent.score+=self.array[drow][dst].chessPiece.strength
-                self.array[drow][dst].chessPiece.remove()
+                agent.attackedPieces.append(self.array[dRow][dCol].chessPiece)
+                agent.score+=self.array[dRow][dCol].chessPiece.strength
+                self.array[dRow][dCol].chessPiece.remove()
 
-        self.array[drow][dst].chessPiece=copy.deepcopy(self.array[row][st].chessPiece)
-        self.array[drow][dst].isEmpty=False
-        self.array[row][st].chessPiece.remove()
-        self.array[row][st].isEmpty=True
-        print(self.array[row][st].identifier+" is emptied!")
+        self.array[dRow][dCol].chessPiece=copy.deepcopy(self.array[cRow][cCol].chessPiece)
+        self.array[dRow][dCol].isEmpty=False
+        self.array[cRow][cCol].chessPiece.remove()
+        self.array[cRow][cCol].isEmpty=True
+        print(self.array[cRow][cCol].identifier+" is emptied!")
+        return True
 
+    def randomMoveChessPiece(self, agent):
+        move = random.choice(self.generateMoves(agent.colour))
+        print("Move\nStart: ",move.startX, ' ', move.startY, "\nEnd: ", move.endX, ' ', move.endX)
+        startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
+        endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX)
+        while 1:
+            if self.array[move.startX][move.startY].chessPiece.checkValidMove(move.startX, move.startY, move.endX, move.endY, self.array, agent.colour):
+            #if startIdentifier[1] == '7':   #only choose black pawns for now
+                break
+            else:
+                print("Another random move")
+                move = random.choice(self.generateMoves(agent.colour))
+            startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
+            endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX)
 
+        print("startIdentifier: ", startIdentifier)
+        print("endIdentifier: ", endIdentifier)
+        self.moveChessPiece(startIdentifier,endIdentifier, agent)
+
+    def generateMoves(self, colour):
+        moves = []
+        moves.extend(generatePawnMoves(colour,self.array))
+        moves.extend(generateBishopMoves(colour,self.array))
+        moves.extend(generateRookMoves(colour,self.array))
+        moves.extend(generateKnightMoves(colour,self.array))
+        moves.extend(generateKingMoves(colour,self.array))
+        moves.extend(generateQueenMoves(colour,self.array))
+        return moves
 
     """ def countPieces(self, pieceName, colour):
         count=0
