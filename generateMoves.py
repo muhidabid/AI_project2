@@ -14,12 +14,12 @@ def generatePawnMoves(colour, board):
         for i in range(8):
             for j in range(8):
                 if board[i][j].chessPiece.name == 'pawn' and board[i][j].chessPiece.colour == 'white':
-                    if i > 0: moves.append(Move(i, j, i-1, j))
+                    if i-1>=0 and board[i][j].chessPiece.checkValidMove(i, j, i-1, j, board, colour): moves.append(Move(i, j, i-1, j))
     elif colour == 'black':
         for i in range(8):
             for j in range(8):
                 if board[i][j].chessPiece.name == 'pawn' and board[i][j].chessPiece.colour == 'black':
-                    if i < 7: moves.append(Move(i, j, i+1, j))
+                    if i+1<=7 and board[i][j].chessPiece.checkValidMove(i, j, i-1, j, board, colour): moves.append(Move(i, j, i+1, j))
 
     return moves
 
@@ -36,7 +36,7 @@ def generateBishopMoves(colour, board):
                     tempY = tempY+1
                     if tempX < 0 or tempY > 7:
                         break
-                    else:
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
                         moves.append(Move(i, j, tempX, tempY))
                 # top left diagonal moves
                 tempX = i
@@ -46,7 +46,7 @@ def generateBishopMoves(colour, board):
                     tempY = tempY-1
                     if tempX < 0 or tempY < 0:
                         break
-                    else:
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
                         moves.append(Move(i, j, tempX, tempY))
                 # bottom right diagonal moves
                 tempX = i
@@ -56,7 +56,7 @@ def generateBishopMoves(colour, board):
                     tempY = tempY+1
                     if tempX > 7 or tempY > 7:
                         break
-                    else:
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
                         moves.append(Move(i, j, tempX, tempY))
                 # bottom left diagonal moves
                 tempX = i
@@ -66,7 +66,7 @@ def generateBishopMoves(colour, board):
                     tempY = tempY-1
                     if tempX > 7 or tempY < 0:
                         break
-                    else:
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
                         moves.append(Move(i, j, tempX, tempY))
     return moves
     
@@ -82,7 +82,8 @@ def generateRookMoves(colour, board):
                     tempX = tempX-1
                     if tempX < 0:
                         break
-                    moves.append(Move(i,j,tempX,tempY))
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
+                        moves.append(Move(i,j,tempX,tempY))
                 #down
                 tempX = i
                 tempY = j
@@ -90,7 +91,8 @@ def generateRookMoves(colour, board):
                     tempX = tempX+1
                     if tempX > 7:
                         break
-                    moves.append(Move(i,j,tempX,tempY))
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
+                        moves.append(Move(i,j,tempX,tempY))
                 #right
                 tempX = i
                 tempY = j
@@ -98,7 +100,8 @@ def generateRookMoves(colour, board):
                     tempY = tempY+1
                     if tempY > 7:
                         break
-                    moves.append(Move(i,j,tempX,tempY))
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
+                        moves.append(Move(i,j,tempX,tempY))
                 #left
                 tempX = i
                 tempY = j
@@ -106,7 +109,8 @@ def generateRookMoves(colour, board):
                     tempY = tempY-1
                     if tempY < 0:
                         break
-                    moves.append(Move(i,j,tempX,tempY))
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
+                        moves.append(Move(i,j,tempX,tempY))
     return moves
 
 def generateKnightMoves(colour, board):
@@ -117,22 +121,22 @@ def generateKnightMoves(colour, board):
                 # if conditions going clockwise starting top right
                 # right half of moves
                 if i-2 >= 0 and j+1 <= 7:
-                    moves.append(Move(i,j,i-2,j+1))
+                    if board[i][j].chessPiece.checkValidMove(i, j, i-2, j+1, board, colour):moves.append(Move(i,j,i-2,j+1))
                 if i-1 >= 0 and j+2 <= 7:
-                    moves.append(Move(i,j,i-1,j+2))
+                    if board[i][j].chessPiece.checkValidMove(i, j, i-1, j+2, board, colour):moves.append(Move(i,j,i-1,j+2))
                 if i+1 <= 7 and j+2 <= 7:
-                    moves.append(Move(i,j,i+1,j+2))
+                    if board[i][j].chessPiece.checkValidMove(i, j, i+1, j+2, board, colour):moves.append(Move(i,j,i+1,j+2))
                 if i+2 <= 7 and j+1 <= 7:
-                    moves.append(Move(i,j,i+2,j+1))
+                    if board[i][j].chessPiece.checkValidMove(i, j, i+2, j+1, board, colour):moves.append(Move(i,j,i+2,j+1))
                 # left half of moves
                 if i+2 <= 7 and j-1 >= 0:
-                    moves.append(Move(i,j,i+2,j-1))
+                    if board[i][j].chessPiece.checkValidMove(i, j, i+2, j-1, board, colour):moves.append(Move(i,j,i+2,j-1))
                 if i+1 <= 7 and j-2 >= 0:
-                    moves.append(Move(i,j,i+1,j-2))
+                    if board[i][j].chessPiece.checkValidMove(i, j, i+1, j-2, board, colour):moves.append(Move(i,j,i+1,j-2))
                 if i-1 >= 0 and j-2 >= 0:
-                    moves.append(Move(i,j,i-1,j-2))
+                    if board[i][j].chessPiece.checkValidMove(i, j, i-1, j-2, board, colour):moves.append(Move(i,j,i-1,j-2))
                 if i-2 >= 0 and j-1 >= 0:
-                    moves.append(Move(i,j,i-2,j+1))
+                    if board[i][j].chessPiece.checkValidMove(i, j, i-2, j-1, board, colour):moves.append(Move(i,j,i-2,j+1))
     return moves
 
 def generateKingMoves(colour, board):
@@ -141,14 +145,14 @@ def generateKingMoves(colour, board):
         for j in range(8):
             if board[i][j].chessPiece.name == 'king' and board[i][j].chessPiece.colour == colour:
                 # moving clockwise starting top left
-                moves.append(Move(i,j,i-1,j-1))
-                moves.append(Move(i,j,i-1,j))
-                moves.append(Move(i,j,i-1,j+1))
-                moves.append(Move(i,j,i,j+1))
-                moves.append(Move(i,j,i+1,j+1))
-                moves.append(Move(i,j,i+1,j))
-                moves.append(Move(i,j,i+1,j-1))
-                moves.append(Move(i,j,i,j-1))
+                if board[i][j].chessPiece.checkValidMove(i, j, i-1, j-1, board, colour):moves.append(Move(i,j,i-1,j-1))
+                if board[i][j].chessPiece.checkValidMove(i, j, i-1, j, board, colour):moves.append(Move(i,j,i-1,j))
+                if board[i][j].chessPiece.checkValidMove(i, j, i-1, j+1, board, colour):moves.append(Move(i,j,i-1,j+1))
+                if board[i][j].chessPiece.checkValidMove(i, j, i, j+1, board, colour):moves.append(Move(i,j,i,j+1))
+                if board[i][j].chessPiece.checkValidMove(i, j, i+1, j+1, board, colour):moves.append(Move(i,j,i+1,j+1))
+                if board[i][j].chessPiece.checkValidMove(i, j, i+1, j, board, colour):moves.append(Move(i,j,i+1,j))
+                if board[i][j].chessPiece.checkValidMove(i, j, i+1, j-1, board, colour):moves.append(Move(i,j,i+1,j-1))
+                if board[i][j].chessPiece.checkValidMove(i, j, i, j-1, board, colour):moves.append(Move(i,j,i,j-1))
     return moves
 
 def generateQueenMoves(colour, board):
@@ -164,7 +168,8 @@ def generateQueenMoves(colour, board):
                     tempX = tempX-1
                     if tempX < 0:
                         break
-                    moves.append(Move(i,j,tempX,tempY))
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
+                        moves.append(Move(i,j,tempX,tempY))
                 #down
                 tempX = i
                 tempY = j
@@ -172,7 +177,8 @@ def generateQueenMoves(colour, board):
                     tempX = tempX+1
                     if tempX > 7:
                         break
-                    moves.append(Move(i,j,tempX,tempY))
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
+                        moves.append(Move(i,j,tempX,tempY))
                 #right
                 tempX = i
                 tempY = j
@@ -180,7 +186,8 @@ def generateQueenMoves(colour, board):
                     tempY = tempY+1
                     if tempY > 7:
                         break
-                    moves.append(Move(i,j,tempX,tempY))
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
+                        moves.append(Move(i,j,tempX,tempY))
                 #left
                 tempX = i
                 tempY = j
@@ -188,7 +195,8 @@ def generateQueenMoves(colour, board):
                     tempY = tempY-1
                     if tempY < 0:
                         break
-                    moves.append(Move(i,j,tempX,tempY))
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
+                        moves.append(Move(i,j,tempX,tempY))
                 # BISHOP MOVES
                 # top right diagonal moves
                 tempX = i
@@ -198,7 +206,7 @@ def generateQueenMoves(colour, board):
                     tempY = tempY+1
                     if tempX < 0 or tempY > 7:
                         break
-                    else:
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
                         moves.append(Move(i, j, tempX, tempY))
                 # top left diagonal moves
                 tempX = i
@@ -208,7 +216,7 @@ def generateQueenMoves(colour, board):
                     tempY = tempY-1
                     if tempX < 0 or tempY < 0:
                         break
-                    else:
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
                         moves.append(Move(i, j, tempX, tempY))
                 # bottom right diagonal moves
                 tempX = i
@@ -218,7 +226,7 @@ def generateQueenMoves(colour, board):
                     tempY = tempY+1
                     if tempX > 7 or tempY > 7:
                         break
-                    else:
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
                         moves.append(Move(i, j, tempX, tempY))
                 # bottom left diagonal moves
                 tempX = i
@@ -228,7 +236,7 @@ def generateQueenMoves(colour, board):
                     tempY = tempY-1
                     if tempX > 7 or tempY < 0:
                         break
-                    else:
+                    elif board[i][j].chessPiece.checkValidMove(i, j, tempX, tempY, board, colour):
                         moves.append(Move(i, j, tempX, tempY))
     return moves
 
