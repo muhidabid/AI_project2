@@ -14,12 +14,18 @@ def generatePawnMoves(colour, board):
         for i in range(8):
             for j in range(8):
                 if board[i][j].chessPiece.name == 'pawn' and board[i][j].chessPiece.colour == 'white':
-                    if i-1>=0 and board[i][j].chessPiece.checkValidMove(i, j, i-1, j, board, colour): moves.append(Move(i, j, i-1, j))
+                    if i==6:
+                        if board[i][j].chessPiece.checkValidMove(i, j, i-1, j, board, colour): moves.append(Move(i, j, i-1, j))
+                        if board[i][j].chessPiece.checkValidMove(i, j, i-2, j, board, colour): moves.append(Move(i, j, i-2, j))                        
+                    elif i-1>=0 and board[i][j].chessPiece.checkValidMove(i, j, i-1, j, board, colour): moves.append(Move(i, j, i-1, j))
     elif colour == 'black':
         for i in range(8):
             for j in range(8):
                 if board[i][j].chessPiece.name == 'pawn' and board[i][j].chessPiece.colour == 'black':
-                    if i+1<=7 and board[i][j].chessPiece.checkValidMove(i, j, i-1, j, board, colour): moves.append(Move(i, j, i+1, j))
+                    if i==1:
+                        if board[i][j].chessPiece.checkValidMove(i, j, i+1, j, board, colour): moves.append(Move(i, j, i+1, j))
+                        if board[i][j].chessPiece.checkValidMove(i, j, i+2, j, board, colour): moves.append(Move(i, j, i+2, j))                        
+                    elif i+1<=7 and board[i][j].chessPiece.checkValidMove(i, j, i+1, j, board, colour): moves.append(Move(i, j, i+1, j))
 
     return moves
 
@@ -136,7 +142,7 @@ def generateKnightMoves(colour, board):
                 if i-1 >= 0 and j-2 >= 0:
                     if board[i][j].chessPiece.checkValidMove(i, j, i-1, j-2, board, colour):moves.append(Move(i,j,i-1,j-2))
                 if i-2 >= 0 and j-1 >= 0:
-                    if board[i][j].chessPiece.checkValidMove(i, j, i-2, j-1, board, colour):moves.append(Move(i,j,i-2,j+1))
+                    if board[i][j].chessPiece.checkValidMove(i, j, i-2, j-1, board, colour):moves.append(Move(i,j,i-2,j-1))
     return moves
 
 def generateKingMoves(colour, board):
@@ -145,14 +151,22 @@ def generateKingMoves(colour, board):
         for j in range(8):
             if board[i][j].chessPiece.name == 'king' and board[i][j].chessPiece.colour == colour:
                 # moving clockwise starting top left
-                if board[i][j].chessPiece.checkValidMove(i, j, i-1, j-1, board, colour):moves.append(Move(i,j,i-1,j-1))
-                if board[i][j].chessPiece.checkValidMove(i, j, i-1, j, board, colour):moves.append(Move(i,j,i-1,j))
-                if board[i][j].chessPiece.checkValidMove(i, j, i-1, j+1, board, colour):moves.append(Move(i,j,i-1,j+1))
-                if board[i][j].chessPiece.checkValidMove(i, j, i, j+1, board, colour):moves.append(Move(i,j,i,j+1))
-                if board[i][j].chessPiece.checkValidMove(i, j, i+1, j+1, board, colour):moves.append(Move(i,j,i+1,j+1))
-                if board[i][j].chessPiece.checkValidMove(i, j, i+1, j, board, colour):moves.append(Move(i,j,i+1,j))
-                if board[i][j].chessPiece.checkValidMove(i, j, i+1, j-1, board, colour):moves.append(Move(i,j,i+1,j-1))
-                if board[i][j].chessPiece.checkValidMove(i, j, i, j-1, board, colour):moves.append(Move(i,j,i,j-1))
+                if i-1>=0 and j-1>=0:
+                    if board[i][j].chessPiece.checkValidMove(i, j, i-1, j-1, board, colour):moves.append(Move(i,j,i-1,j-1))
+                if i-1>=0:
+                    if board[i][j].chessPiece.checkValidMove(i, j, i-1, j, board, colour):moves.append(Move(i,j,i-1,j))
+                if i-1>=0 and j+1<=7:
+                    if board[i][j].chessPiece.checkValidMove(i, j, i-1, j+1, board, colour):moves.append(Move(i,j,i-1,j+1))
+                if j+1<=7:
+                    if board[i][j].chessPiece.checkValidMove(i, j, i, j+1, board, colour):moves.append(Move(i,j,i,j+1))
+                if i+1<=7 and j+1<=7:
+                    if board[i][j].chessPiece.checkValidMove(i, j, i+1, j+1, board, colour):moves.append(Move(i,j,i+1,j+1))
+                if i+1<=7:
+                    if board[i][j].chessPiece.checkValidMove(i, j, i+1, j, board, colour):moves.append(Move(i,j,i+1,j))
+                if i+1<=7 and j-1>=0:
+                    if board[i][j].chessPiece.checkValidMove(i, j, i+1, j-1, board, colour):moves.append(Move(i,j,i+1,j-1))
+                if j-1>=0:
+                    if board[i][j].chessPiece.checkValidMove(i, j, i, j-1, board, colour):moves.append(Move(i,j,i,j-1))
     return moves
 
 def generateQueenMoves(colour, board):

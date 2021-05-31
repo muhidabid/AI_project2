@@ -24,6 +24,8 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
 
     def __init__(self):
         self.array = np.ndarray((8,8),dtype=object)
+        self.prevBoardState = np.ndarray((8,8),dtype=object)
+        self.prevChessPiece = chessPiece('null','null','null',0)
 
     def initializeBoard(self):
         num=8
@@ -128,15 +130,18 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
 
         st=ord('e')-ord('a')                    #Placing white King(e1)         
         self.array[7][st].chessPiece=King("white","e1")
-        
+    #-----------------------------Movement-----------------------------------    
     def moveChessPiece(self, current, destination, agent):
         cCol=ord(current[0])-ord('a')
         cRow=8-int(current[1])
         dCol=ord(destination[0])-ord('a')
         dRow=8-int(destination[1])
+        #print('cRow: ',cRow,'\ncCol: ',cCol,'\ndRow: ',dRow,'\ndCol: ',dCol)
 
+        if cRow not in range(8) and cCol not in range(8) and dRow not in range(8) and dCol not in range(8):
+            return False
         if not self.array[cRow][cCol].chessPiece.checkValidMove(cRow, cCol, dRow, dCol, self.array, agent.colour):
-            print("Invalid Move! checkValidMove is False")
+            #print("Invalid Move! checkValidMove is False")
             return False
         """ elif self.array[dRow][dCol].isEmpty==False:
             if self.array[dRow][dCol].chessPiece.colour==agent.colour:
@@ -158,14 +163,36 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         self.array[dRow][dCol].isEmpty=False
         self.array[cRow][cCol].chessPiece.remove()
         self.array[cRow][cCol].isEmpty=True
-        print(self.array[cRow][cCol].identifier+" is emptied!")
+        #print(self.array[cRow][cCol].identifier+" is emptied!")
         return True
 
-    def randomMoveChessPiece(self, agent):
-        move = random.choice(self.generateMoves(agent.colour))
-        print("Move\nStart: ",move.startX, ' ', move.startY, "\nEnd: ", move.endX, ' ', move.endX)
+    def forceMoveChessPiece(self, current, destination, agent):
+        cCol=ord(current[0])-ord('a')
+        cRow=8-int(current[1])
+        dCol=ord(destination[0])-ord('a')
+        dRow=8-int(destination[1])
+        #print('cRow: ',cRow,'\ncCol: ',cCol,'\ndRow: ',dRow,'\ndCol: ',dCol)
+
+        if self.array[dRow][dCol].isEmpty==False:                                  # if square not empty, ie. there is a piece on it
+            if self.array[dRow][dCol].chessPiece.colour!=agent.colour:               # check if the piece is of opponent
+                agent.attacked+=1
+                agent.attackedPieces.append(self.array[dRow][dCol].chessPiece)
+                agent.score+=self.array[dRow][dCol].chessPiece.strength
+                self.array[dRow][dCol].chessPiece.remove()
+
+        self.array[dRow][dCol].chessPiece=copy.deepcopy(self.array[cRow][cCol].chessPiece)
+        self.array[dRow][dCol].isEmpty=False
+        self.array[cRow][cCol].chessPiece.remove()
+        self.array[cRow][cCol].isEmpty=True
+        #print(self.array[cRow][cCol].identifier+" is emptied!")
+        return True
+
+    def randomMoveChessPiece(self, currentAgent, opponentAgent):
+        #move = random.choice(self.generateMoves(currentAgent))        
+        move = random.choice(self.generateLegalMoves(currentAgent, opponentAgent))        
         startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
         endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX)
+        """ print("Move\nStart: ",move.startX, ' ', move.startY, "\nEnd: ", move.endX, ' ', move.endY)
         while 1:
             if self.array[move.startX][move.startY].chessPiece.checkValidMove(move.startX, move.startY, move.endX, move.endY, self.array, agent.colour):
             #if startIdentifier[1] == '7':   #only choose black pawns for now
@@ -174,22 +201,43 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
                 print("Another random move")
                 move = random.choice(self.generateMoves(agent.colour))
             startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
-            endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX)
+            endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX) """
 
         print("startIdentifier: ", startIdentifier)
         print("endIdentifier: ", endIdentifier)
-        self.moveChessPiece(startIdentifier,endIdentifier, agent)
+        self.moveChessPiece(startIdentifier,endIdentifier, currentAgent)
 
-    def generateMoves(self, colour):
+    def generateLegalMoves(self, currentAgent, opponentAgent):   # moves that dont make king open to attack in next move
+        suedoLegalMoves = self.generateMoves(currentAgent)
+        legalMoves = []
+        for suedoLegalMove in suedoLegalMoves:  #bot's legal moves
+            #print("Making move...\nStart: ",suedoLegalMove.startX, ' ', suedoLegalMove.startY, "\nEnd: ", suedoLegalMove.endX, ' ', suedoLegalMove.endY)
+            self.makeMove(suedoLegalMove,currentAgent)
+            opponentResponses = self.generateMoves(opponentAgent)
+
+            for opponentResponse in opponentResponses:
+                if self.isHittingKingOfAgent(opponentResponse,currentAgent):
+                    #print('not legal')
+                    pass
+                else:
+                    #print('legal')
+                    legalMoves.append(suedoLegalMove)
+
+            #print("Unaking move...\nStart: ",suedoLegalMove.startX, ' ', suedoLegalMove.startY, "\nEnd: ", suedoLegalMove.endX, ' ', suedoLegalMove.endY)
+            self.unmakeMove(suedoLegalMove,currentAgent)
+        return legalMoves
+    
+    def generateMoves(self, agent):
+        #print('\nGenerating moves...')
         moves = []
-        moves.extend(generatePawnMoves(colour,self.array))
-        moves.extend(generateBishopMoves(colour,self.array))
-        moves.extend(generateRookMoves(colour,self.array))
-        moves.extend(generateKnightMoves(colour,self.array))
-        moves.extend(generateKingMoves(colour,self.array))
-        moves.extend(generateQueenMoves(colour,self.array))
+        moves.extend(generatePawnMoves(agent.colour,self.array))
+        moves.extend(generateBishopMoves(agent.colour,self.array))
+        moves.extend(generateRookMoves(agent.colour,self.array))
+        moves.extend(generateKnightMoves(agent.colour,self.array))
+        moves.extend(generateKingMoves(agent.colour,self.array))
+        moves.extend(generateQueenMoves(agent.colour,self.array))
         return moves
-
+    #-----------------------------Evaluation------------------------------------    
     """ def countPieces(self, pieceName, colour):
         count=0
         for i in range(8):
@@ -198,7 +246,6 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
                     if(self.array[i][j].chessPiece.name==pieceName and self.array[i][j].chessPiece.colour==colour):
                         count+=1
         return count               
-
 
     def materialFunction(self):
         wp = self.countPieces('p',"white")
@@ -215,7 +262,6 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         material = 100*(wp-bp)+320*(wn-bn)+330*(wb-bb)+500*(wr-br)+900*(wq-bq)
 
         return material """
-
 
     def positionsFunction(self):
         evaluation=0
@@ -238,7 +284,6 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
                         #---------IMPLEMENT KING'S ENDGAME TABLE AND SCORE HERE-------#
         return evaluation
 
-
     def materialFunction(self):
             strength = 0
             for i in range(8):
@@ -253,6 +298,89 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
     def evaluationFunction(self):
         #return self.materialFunction()+self.positionsFunction()
         return self.materialFunction()
+    #------------------------------King/Winning-----------------------------------    
+    def isHittingKingOfAgent(self, move, agent):
+        return self.array[move.endX][move.endY].chessPiece.name == 'king' and self.array[move.endX][move.endY].chessPiece.colour == agent.colour
+
+    def checkWinning(self, agent1, agent2):
+        if len(self.generateLegalMoves(agent1,agent2))==0: 
+            print(agent1.colour, ' has won by CHECKMATE!')
+            return False # stop game
+        elif len(self.generateLegalMoves(agent2,agent1))==0: 
+            print(agent2.colour, ' has won by CHECKMATE!')
+            return False # stop game
+        return True
+        """ whiteKing = False
+        blackKing = False
+        for i in range(8):
+            for j in range(8):
+                if not self.array[i][j].isEmpty:
+                    if self.array[i][j].chessPiece.name=='king' and self.array[i][j].chessPiece.colour=='white':whiteKing=True
+                    if self.array[i][j].chessPiece.name=='king' and self.array[i][j].chessPiece.colour=='black':blackKing=True
+
+        if whiteKing==False:
+            print('\n!!!Black won!!!\n')
+            return False
+        if blackKing==False:
+            print('\n!!!White won!!!\n')
+            return False
+        return True """
+    #------------------------------Special moves-----------------------------------    
+    def checkPawnPromotion(self):
+        for col in range(8):
+            # check white pawns
+            while 1:
+                validChoice = False
+                if self.array[0][col].chessPiece.name == 'pawn' and self.array[0][col].chessPiece.colour == 'white':
+                    identifier = chr(ord('a') + col) + '8' 
+                    print('White pawn at: ', identifier)
+                    print('What do you want the pawn to promote to?')
+                    choice = input('1.knight\n2.bishop\n3.rook\n4.queen\nType name of choice in lower case: ')
+                    if choice=='knight' or choice=='bishop' or choice=='rook' or choice=='queen':
+                        validChoice = True
+                    else:
+                        print("Invalid choice. Choose again...")
+                else:break
+                if validChoice:
+                    if choice=='knight':
+                        self.array[0][col].chessPiece = Knight('white',0)
+                    elif choice=='bishop': 
+                        self.array[0][col].chessPiece = Bishop('white',0)
+                    elif choice=='rook':
+                        self.array[0][col].chessPiece = Rook('white',0)
+                    elif choice=='queen':
+                        self.array[0][col].chessPiece = Queen('white',0)
+                    self.displayChessBoard()
+                    break
+
+
+            # check black pawns
+            # black is AI sooo the smartest thing to do is to change the pawn into a queen
+            # so instead of asking or randomly choosing promotion, we will promote to a queen
+            while 1:
+                validChoice = False
+                if self.array[7][col].chessPiece.name == 'pawn' and self.array[0][col].chessPiece.colour == 'black':
+                    validChoice = True
+                else:break
+                if validChoice:
+                    self.array[7][col].chessPiece = Queen('black',0)
+                    self.displayChessBoard()
+                    break
+
+    def castling(self):
+        pass
+    #-----------------------------Supportive------------------------------------
+    def makeMove(self, move, agent):
+        startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
+        endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX)
+        self.prevBoardState = np.copy(self.array)
+        return self.forceMoveChessPiece(startIdentifier,endIdentifier,agent)
+
+    def unmakeMove(self, move, agent):
+        """ startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
+        endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX)
+        return self.forceMoveChessPiece(endIdentifier,startIdentifier,agent) """
+        self.array = np.copy(self.prevBoardState)
 
     def displayChessBoard(self):
         print("Evaluation: ", self.evaluationFunction())

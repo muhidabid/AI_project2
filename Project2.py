@@ -16,14 +16,19 @@ def game(user, chessBot):
     board=chessBoard()
     board.initializeBoard()
     board.displayChessBoard()
+    playing=True
 
-    while 1:
+    while playing:
         print("\033[1;32;40m Enter current position and destined position\n")
         currentpos=input()
         destpos=input()
-        board.moveChessPiece(currentpos,destpos, user)
-        board.randomMoveChessPiece(chessBot)
-        board.displayChessBoard()
+        if board.moveChessPiece(currentpos,destpos, user):
+            board.randomMoveChessPiece(chessBot,user)
+            board.displayChessBoard()
+        else:
+            print("!!! Invalid Move !!!")
+        board.checkPawnPromotion()
+        #playing=board.checkWinning(user, chessBot)
 
 user=Agent(True, "white")  #We will have two agents, user and chess bot
 chessBot=Agent(False, "black")
