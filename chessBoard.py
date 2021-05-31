@@ -19,13 +19,31 @@ class square:
         self.chessPiece=chessPiece('null','null','null',0)     # what chessPiece is placed on the square if its not empty
         #self.chessPiece = ''
 
+class prevBeatChessPiece:
+    def __init__(self,cRow,cCol,dRow,dCol,chessPiece):
+        self.fromThisX=cRow
+        self.fromThisY=cCol
+        self.atThisX=dRow
+        self.atThisY=dCol
+        self.chessPiece=chessPiece
 
 class chessBoard: #chessBoard will contain a 2D array of square instances
 
     def __init__(self):
         self.array = np.ndarray((8,8),dtype=object)
         self.prevBoardState = np.ndarray((8,8),dtype=object)
-        self.prevChessPiece = chessPiece('null','null','null',0)
+        self.prevBeatChessPiece = prevBeatChessPiece(0,0,0,0,chessPiece('null','null','null',0))
+        num=8
+        for i in range(8):
+            st='a'
+            for j in range(8):
+                number=str(num)            
+                st=st+number
+                if(num>=7 or num <=2):
+                    empty=False
+                else:
+                    empty=True
+                self.prevBoardState[i][j] = square(st,empty)
 
     def initializeBoard(self):
         num=8
@@ -155,6 +173,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         if self.array[dRow][dCol].isEmpty==False:                                  # if square not empty, ie. there is a piece on it
             if self.array[dRow][dCol].chessPiece.colour!=agent.colour:               # check if the piece is of opponent
                 agent.attacked+=1
+                ###self.prevBeatChessPiece = prevBeatChessPiece(cRow,cCol,dRow,dCol,chessPiece(self.array[dRow][dCol].chessPiece.name,self.array[dRow][dCol].chessPiece.symbol,self.array[dRow][dCol].chessPiece.colour,0))
                 agent.attackedPieces.append(self.array[dRow][dCol].chessPiece)
                 agent.score+=self.array[dRow][dCol].chessPiece.strength
                 self.array[dRow][dCol].chessPiece.remove()
@@ -173,17 +192,19 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         dRow=8-int(destination[1])
         #print('cRow: ',cRow,'\ncCol: ',cCol,'\ndRow: ',dRow,'\ndCol: ',dCol)
 
-        if self.array[dRow][dCol].isEmpty==False:                                  # if square not empty, ie. there is a piece on it
+        """ if self.array[dRow][dCol].isEmpty==False:                                  # if square not empty, ie. there is a piece on it
             if self.array[dRow][dCol].chessPiece.colour!=agent.colour:               # check if the piece is of opponent
                 agent.attacked+=1
                 agent.attackedPieces.append(self.array[dRow][dCol].chessPiece)
                 agent.score+=self.array[dRow][dCol].chessPiece.strength
-                self.array[dRow][dCol].chessPiece.remove()
+                self.array[dRow][dCol].chessPiece.remove() """
 
         self.array[dRow][dCol].chessPiece=copy.deepcopy(self.array[cRow][cCol].chessPiece)
         self.array[dRow][dCol].isEmpty=False
         self.array[cRow][cCol].chessPiece.remove()
         self.array[cRow][cCol].isEmpty=True
+        # restore previously beat chess piece:
+        ###self.array[self.prevBeatChessPiece.atThisX][self.prevBeatChessPiece.atThisY].chessPiece = self.prevBeatChessPiece.chessPiece
         #print(self.array[cRow][cCol].identifier+" is emptied!")
         return True
 
@@ -212,6 +233,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         legalMoves = []
         for suedoLegalMove in suedoLegalMoves:  #bot's legal moves
             #print("Making move...\nStart: ",suedoLegalMove.startX, ' ', suedoLegalMove.startY, "\nEnd: ", suedoLegalMove.endX, ' ', suedoLegalMove.endY)
+            self.prevBoardState = copy.deepcopy(self.array)     # STORE BOARD STATE
             self.makeMove(suedoLegalMove,currentAgent)
             opponentResponses = self.generateMoves(opponentAgent)
 
@@ -225,6 +247,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
 
             #print("Unaking move...\nStart: ",suedoLegalMove.startX, ' ', suedoLegalMove.startY, "\nEnd: ", suedoLegalMove.endX, ' ', suedoLegalMove.endY)
             self.unmakeMove(suedoLegalMove,currentAgent)
+            self.array = copy.deepcopy(self.prevBoardState)     # UNMAKE MOVE
         return legalMoves
     
     def generateMoves(self, agent):
@@ -303,28 +326,30 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         return self.array[move.endX][move.endY].chessPiece.name == 'king' and self.array[move.endX][move.endY].chessPiece.colour == agent.colour
 
     def checkWinning(self, agent1, agent2):
+        # CHECK FOR CHECKMATE
         if len(self.generateLegalMoves(agent1,agent2))==0: 
             print(agent1.colour, ' has won by CHECKMATE!')
             return False # stop game
         elif len(self.generateLegalMoves(agent2,agent1))==0: 
             print(agent2.colour, ' has won by CHECKMATE!')
             return False # stop game
-        return True
-        """ whiteKing = False
+        # CHECK IF KING GOT BEAT
+        whiteKing = False
         blackKing = False
         for i in range(8):
             for j in range(8):
                 if not self.array[i][j].isEmpty:
                     if self.array[i][j].chessPiece.name=='king' and self.array[i][j].chessPiece.colour=='white':whiteKing=True
                     if self.array[i][j].chessPiece.name=='king' and self.array[i][j].chessPiece.colour=='black':blackKing=True
-
         if whiteKing==False:
             print('\n!!!Black won!!!\n')
             return False
         if blackKing==False:
             print('\n!!!White won!!!\n')
             return False
-        return True """
+        
+        return True
+        
     #------------------------------Special moves-----------------------------------    
     def checkPawnPromotion(self):
         for col in range(8):
@@ -373,8 +398,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
     def makeMove(self, move, agent):
         startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
         endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX)
-        #self.prevBoardState = np.copy(self.array)
-        return self.forceMoveChessPiece(startIdentifier,endIdentifier,agent)
+        return self.moveChessPiece(startIdentifier,endIdentifier,agent)
 
     def unmakeMove(self, move, agent):
         startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 

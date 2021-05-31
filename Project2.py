@@ -28,7 +28,7 @@ def game(user, chessBot):
         else:
             print("!!! Invalid Move !!!")
         board.checkPawnPromotion()
-        #playing=board.checkWinning(user, chessBot)
+        playing=board.checkWinning(user, chessBot)
 
 user=Agent(True, "white")  #We will have two agents, user and chess bot
 chessBot=Agent(False, "black")
