@@ -373,14 +373,14 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
     def makeMove(self, move, agent):
         startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
         endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX)
-        self.prevBoardState = np.copy(self.array)
+        #self.prevBoardState = np.copy(self.array)
         return self.forceMoveChessPiece(startIdentifier,endIdentifier,agent)
 
     def unmakeMove(self, move, agent):
-        """ startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
+        startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
         endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX)
-        return self.forceMoveChessPiece(endIdentifier,startIdentifier,agent) """
-        self.array = np.copy(self.prevBoardState)
+        return self.forceMoveChessPiece(endIdentifier,startIdentifier,agent)
+        #self.array = np.copy(self.prevBoardState)
 
     def displayChessBoard(self):
         print("Evaluation: ", self.evaluationFunction())
