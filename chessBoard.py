@@ -489,7 +489,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         return True
 
     def updateGamePhase(self):
-        if len(self.history) > 40 or (self.whiteMaterial < 14 and self.blackMaterial < 14):
+        if self.noOfMovesHistory > 40 or (self.whiteMaterial < 14 and self.blackMaterial < 14):
             self.gamePhase = 'ending'  
     #------------------------------Special moves-----------------------------------    
     def checkPawnPromotion(self):
