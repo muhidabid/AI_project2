@@ -34,6 +34,11 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         self.whiteMaterial = 0
         self.blackMaterial = 0
         self.noOfMovesHistory = 0
+        self.blackQueenSideCastling = {'right':True, 'left':True}
+        self.blackKingSideCastling = True
+        self.whiteQueenSideCastling = {'right':True, 'left':True}
+        self.whiteKingSideCastling = True
+        
         """ self.history = []
         self.whiteNumOfMoves = 0
         self.blackNumOfMoves = 0 """
@@ -163,11 +168,39 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         cRow=8-int(current[1])
         dCol=ord(destination[0])-ord('a')
         dRow=8-int(destination[1])
+        pieceToMove = self.array[cRow][cCol].chessPiece
         #print('cRow: ',cRow,'\ncCol: ',cCol,'\ndRow: ',dRow,'\ndCol: ',dCol)
 
         if cRow not in range(8) and cCol not in range(8) and dRow not in range(8) and dCol not in range(8):
             return False
-        if not self.array[cRow][cCol].chessPiece.checkValidMove(cRow, cCol, dRow, dCol, self.array, agent.colour):
+        
+        # -------- ! CASTLING ! ------- #
+        if pieceToMove.name=='king':
+            isCastling, direction = self.castling(cRow, cCol, dRow, dCol, self.array, agent.colour, pieceToMove)  # checks both rook and king conditions
+            if isCastling:
+                self.forceMoveChessPiece(current, destination, agent)       # move king
+
+                if direction == 'whiteRight':
+                    self.forceMoveChessPiece('h1', 'f1', agent)   # move bottom right rook
+                    self.whiteQueenSideCastling['right'] = False
+                    self.whiteKingSideCastling = False
+                elif direction == 'whiteLeft':
+                    self.forceMoveChessPiece('a1', 'd1', agent)   # move bottom left rook
+                    self.whiteQueenSideCastling['left'] = False
+                    self.whiteKingSideCastling = False
+                elif direction == 'blackRight':
+                    self.forceMoveChessPiece('h8', 'f8', agent)   # move top right rook
+                    self.blackQueenSideCastling['right'] = False
+                    self.blackKingSideCastling = False
+                elif direction == 'blackLeft':
+                    self.forceMoveChessPiece('a8', 'd8', agent)   # move top left rook
+                    self.blackQueenSideCastling['left'] = False
+                    self.blackKingSideCastling = False
+                
+                return True
+                
+            
+        if not pieceToMove.checkValidMove(cRow, cCol, dRow, dCol, self.array, agent.colour):
             #print("Invalid Move! checkValidMove is False")
             return False
         """ elif self.array[dRow][dCol].isEmpty==False:
@@ -187,11 +220,12 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
                 agent.score+=self.array[dRow][dCol].chessPiece.strength
                 self.array[dRow][dCol].chessPiece.remove()
 
-        self.array[dRow][dCol].chessPiece=copy.deepcopy(self.array[cRow][cCol].chessPiece)
+        self.array[dRow][dCol].chessPiece=copy.deepcopy(pieceToMove)
         self.array[dRow][dCol].isEmpty=False
-        self.array[cRow][cCol].chessPiece.remove()
+        pieceToMove.remove()
         self.array[cRow][cCol].isEmpty=True
         #print(self.array[cRow][cCol].identifier+" is emptied!")
+        
         return True
 
     def forceMoveChessPiece(self, current, destination, agent):
@@ -533,13 +567,29 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
                     self.displayChessBoard()
                     break
 
-    def castling(self):
-        pass
+    def castling(self, cRow, cCol, dRow, dCol, board, colour, kingPiece):
+        if colour == 'white':                               # colour
+            if cRow == 7 and cCol == 4:                     # current index
+                if dRow == 7 and dCol == 6:                 # right destination index
+                    if self.whiteKingSideCastling == True and self.whiteQueenSideCastling['right'] == True:
+                        if kingPiece.castlingPathClear(cRow, cCol, dRow, dCol, board, colour): return True, 'whiteRight'
+                elif dRow == 7 and dCol == 2:                 # left destination index
+                    if self.whiteKingSideCastling == True and self.whiteQueenSideCastling['left'] == True:
+                        if kingPiece.castlingPathClear(cRow, cCol, dRow, dCol, board, colour): return True, 'whiteLeft'
+        elif colour == 'black':                             # colour
+            if cRow == 0 and cCol == 4:                     # current index
+                if dRow == 0 and dCol == 6:                 # right destination index
+                    if self.blackKingSideCastling == True and self.blackQueenSideCastling['right'] == True:
+                        if kingPiece.castlingPathClear(cRow, cCol, dRow, dCol, board, colour): return True, 'blackRight'
+                if dRow == 0 and dCol == 2:                 # left destination index
+                    if self.blackKingSideCastling == True and self.blackQueenSideCastling['left'] == True:
+                        if kingPiece.castlingPathClear(cRow, cCol, dRow, dCol, board, colour): return True, 'blackLeft'
+        return False, 'False'
     #-----------------------------Supportive------------------------------------
     def makeMove(self, move, agent):
         startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
         endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX)
-        return self.moveChessPiece(startIdentifier,endIdentifier,agent)
+        return self.forceMoveChessPiece(startIdentifier,endIdentifier,agent)
 
     def unmakeMove(self, move, agent):
         startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 

@@ -641,6 +641,9 @@ class King(chessPiece):
             if(ord(currentpos[0])-1==ord(destpos[0]) or ord(currentpos[0])+1==ord(destpos[0])):
                 return True """
 
+        # -------CHECK IF CASTLING MOVE------- #
+        """ if self.castling(cRow, cCol, dRow, dCol, board, colour):return True     # checks if castling then is it valid?
+        else: """                                                                   # if not castling/valid it will check normal move
         if self.ifAttackCheckValid(dRow,dCol,board,colour):    
             if cCol+1==dCol:    #right diagonal
                 if cRow+1==dRow or cRow-1==dRow:return True
@@ -653,14 +656,32 @@ class King(chessPiece):
         #else:#print("Path not clear")        
         return False    #Invalid Move
 
-    def pathClear(self, cRow, cCol, dRow, dCol, board, colour):
+    def ifAttackCheckValid(self,dRow,dCol,board,colour):
+            if board[dRow][dCol].isEmpty:
+                return True             # square empty so valid attack
+            elif board[dRow][dCol].chessPiece.colour != colour:
+                return True             # square not empty and attackable
+            ##print('Invalid colour on destination')
+            return False                # same colour piece so invalid
+
+
+
+    def castlingPathClear(self, cRow, cCol, dRow, dCol, board, colour):         # make sure this function is called after checking king position
         # king can only move one step so ifAttackCheckValid checks path too
+        # but for castling:
+        if cRow==dRow and cCol<dCol:            # right
+            while dCol!=cCol:
+                if not board[dRow][dCol].isEmpty and board[dRow][dCol].chessPiece.colour == colour:
+                    return False
+                dCol-=1
+        elif cRow==dRow and cCol>dCol:              # left
+            dCol-=1                                 # subtract to include third square on the left
+            while dCol!=cCol:
+                if not board[dRow][dCol].isEmpty and board[dRow][dCol].chessPiece.colour == colour:
+                    return False
+                dCol+=1
         return True
     
-    def ifAttackCheckValid(self,dRow,dCol,board,colour):
-        if board[dRow][dCol].isEmpty:
-            return True             # square empty so valid attack
-        elif board[dRow][dCol].chessPiece.colour != colour:
-            return True             # square not empty and attackable
-        ##print('Invalid colour on destination')
-        return False                # same colour piece so invalid
+    
+
+    
