@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 import random
-
+from numpy import inf
 import tables
 from chessPieces import *
 from generateMoves import *
@@ -33,6 +33,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         self.array = np.ndarray((8,8),dtype=object)
         self.prevBoardState = np.ndarray((8,8),dtype=object)
         self.prevBeatChessPiece = prevBeatChessPiece(0,0,0,0,chessPiece('null','null','null',0))
+        self.bestMove=Move(0,0,0,0)
         num=8
         for i in range(8):
             st='a'
@@ -249,7 +250,80 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
             self.unmakeMove(suedoLegalMove,currentAgent)
             self.array = copy.deepcopy(self.prevBoardState)     # UNMAKE MOVE
         return legalMoves
-    
+
+    def minmax(self,currentAgent,opponentAgent,currentDepth=0):
+        currentDepth+=1     
+
+        if currentDepth > 2: #game over function call
+            return self.bestMove
+
+       
+        
+        if currentDepth % 2 == 0:
+            # min player's turn
+            Moves=self.generateLegalMoves(opponentAgent, currentAgent)
+       #     self.displayChessBoard()
+            minEval=inf
+            minBoards=[]
+            move=Moves[0]
+            m=minIndex=0
+            for i in Moves:
+               
+                newBoard=chessBoard()
+                newBoard=copy.deepcopy(self)
+                minBoards.append(newBoard)
+     #           newBoard.array[i.startX][i.startY].isEmpty=True
+     #           newBoard.array[i.endX][i.endY].isEmpty=False
+                startIdentifier = chr(ord('a') + i.startY) + str(8 - i.startX) 
+                endIdentifier = chr(ord('a') + i.endY) + str(8 - i.endX)         
+                newBoard.moveChessPiece(startIdentifier,endIdentifier,currentAgent)  
+                value=newBoard.evaluationFunction()          
+          #       newBoard.displayChessBoard()
+                if value<minEval:
+                    minEval=value
+                    move=i
+                    minIndex=m
+                m+=1
+              # self.array=copy.deepcopy(newBoard.array)
+            newBoard=minBoards[minIndex]
+                   
+            self.bestMove=copy.deepcopy(move)
+
+         #   newBoard.displayChessBoard()
+            self.bestMove=newBoard.minmax(opponentAgent,currentAgent,currentDepth)
+            return move
+        
+        else:
+            # max player's turn
+            Moves=self.generateLegalMoves(currentAgent, opponentAgent)
+            maxEval=-inf
+            maxBoards=[]
+            move=Moves[0]
+            m=maxIndex=0
+            for i in Moves:
+               
+                newBoard=chessBoard()
+                newBoard=copy.deepcopy(self)
+                maxBoards.append(newBoard)
+     #           newBoard.array[i.startX][i.startY].isEmpty=True
+     #           newBoard.array[i.endX][i.endY].isEmpty=False
+                startIdentifier = chr(ord('a') + i.startY) + str(8 - i.startX) 
+                endIdentifier = chr(ord('a') + i.endY) + str(8 - i.endX)         
+                newBoard.moveChessPiece(startIdentifier,endIdentifier,currentAgent)  
+                value=newBoard.evaluationFunction()          
+           #     newBoard.displayChessBoard()
+                if value>maxEval:
+                    maxEval=value
+                    move=i
+                    maxIndex=m
+                m+=1
+         
+            newBoard=maxBoards[maxIndex]
+       #     newBoard.displayChessBoard()
+            self.bestMove=newBoard.minmax(opponentAgent,currentAgent,currentDepth)
+            return move
+                
+     
     def generateMoves(self, agent):
         #print('\nGenerating moves...')
         moves = []

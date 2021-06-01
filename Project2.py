@@ -1,7 +1,6 @@
 import sys
 from chessBoard import *
 
-#CHESSBOARD= np.ndarray((8,8),dtype=object)
 
 
 class Agent:
@@ -22,8 +21,15 @@ def game(user, chessBot):
         print("\033[1;32;40m Enter current position and destined position\n")
         currentpos=input()
         destpos=input()
+        
         if board.moveChessPiece(currentpos,destpos, user):
-            board.randomMoveChessPiece(chessBot,user)
+       #    board.randomMoveChessPiece(chessBot,user)
+       #     bestMove=Move(0,0,0,0)
+            bestMove=board.minmax(chessBot, user)
+            print(bestMove)
+            startIdentifier = chr(ord('a') + board.bestMove.startY) + str(8 - board.bestMove.startX) 
+            endIdentifier = chr(ord('a') + board.bestMove.endY) + str(8 - board.bestMove.endX) 
+            board.moveChessPiece(startIdentifier,endIdentifier, chessBot)
             board.displayChessBoard()
         else:
             print("!!! Invalid Move !!!")
