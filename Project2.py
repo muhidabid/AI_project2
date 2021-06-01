@@ -22,19 +22,27 @@ def game(user, chessBot):
         currentpos=input()
         destpos=input()
         
-        if board.moveChessPiece(currentpos,destpos, user):
-       #    board.randomMoveChessPiece(chessBot,user)
-       #     bestMove=Move(0,0,0,0)
-            bestMove=board.minmax(chessBot, user)
+        if board.moveChessPiece(currentpos,destpos, user):                                      # PLAYER MOVE
+            playing=board.checkWinning(user, chessBot)
+
+            #board.randomMoveChessPiece(chessBot,user)
+            #bestMove=Move(0,0,0,0)
+            bestMove=board.minmax(chessBot, user)       
+            board.noOfMovesHistory += 1
+
             print(bestMove)
             startIdentifier = chr(ord('a') + board.bestMove.startY) + str(8 - board.bestMove.startX) 
             endIdentifier = chr(ord('a') + board.bestMove.endY) + str(8 - board.bestMove.endX) 
-            board.moveChessPiece(startIdentifier,endIdentifier, chessBot)
+            
+            board.moveChessPiece(startIdentifier,endIdentifier, chessBot)                       # BOT MOVE
+            board.noOfMovesHistory += 1
+            playing=board.checkWinning(user, chessBot)      # check winning after each move
+
             board.displayChessBoard()
+            board.checkEnding()
         else:
             print("!!! Invalid Move !!!")
         board.checkPawnPromotion()
-        playing=board.checkWinning(user, chessBot)
 
 user=Agent(True, "white")  #We will have two agents, user and chess bot
 chessBot=Agent(False, "black")

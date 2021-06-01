@@ -30,6 +30,14 @@ class prevBeatChessPiece:
 class chessBoard: #chessBoard will contain a 2D array of square instances
 
     def __init__(self):
+        self.gamePhase = 'starting'
+        self.whiteMaterial = 0
+        self.blackMaterial = 0
+        self.noOfMovesHistory = 0
+        """ self.history = []
+        self.whiteNumOfMoves = 0
+        self.blackNumOfMoves = 0 """
+
         self.array = np.ndarray((8,8),dtype=object)
         self.prevBoardState = np.ndarray((8,8),dtype=object)
         self.prevBeatChessPiece = prevBeatChessPiece(0,0,0,0,chessPiece('null','null','null',0))
@@ -210,8 +218,16 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         return True
 
     def randomMoveChessPiece(self, currentAgent, opponentAgent):
-        #move = random.choice(self.generateMoves(currentAgent))        
-        move = random.choice(self.generateLegalMoves(currentAgent, opponentAgent))        
+        #move = random.choice(self.generateMoves(currentAgent))
+        legalMoves = self.generateLegalMoves(currentAgent, opponentAgent)  
+      
+        """ if currentAgent.colour == 'black':
+            self.blackNumOfMoves = len(legalMoves)
+        elif currentAgent.colour == 'white':
+            self.whiteNumOfMoves = len(legalMoves) """      
+        
+        move = random.choice(legalMoves)
+        #self.history.append(Move(move.startX, move.startY, move.endX, move.endY))        
         startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
         endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX)
         """ print("Move\nStart: ",move.startX, ' ', move.startY, "\nEnd: ", move.endX, ' ', move.endY)
@@ -247,7 +263,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
                     legalMoves.append(suedoLegalMove)
 
             #print("Unaking move...\nStart: ",suedoLegalMove.startX, ' ', suedoLegalMove.startY, "\nEnd: ", suedoLegalMove.endX, ' ', suedoLegalMove.endY)
-            self.unmakeMove(suedoLegalMove,currentAgent)
+            #self.unmakeMove(suedoLegalMove,currentAgent)
             self.array = copy.deepcopy(self.prevBoardState)     # UNMAKE MOVE
         return legalMoves
 
@@ -367,34 +383,82 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
                 if (self.array[i][j].isEmpty==False):
                     tempChessPiece = self.array[i][j].chessPiece
                     if tempChessPiece.name == 'pawn':
-                        evaluation += tables.pawnEvalWhite[i][j] if tempChessPiece.colour == 'white' else tables.pawnEvalBlack[i][j]
+                        if tempChessPiece.colour == 'white': 
+                            evaluation += tables.pawnEvalWhite[i][j]  
+                            #print(tempChessPiece.name, ' ', tempChessPiece.colour, ' ', tables.pawnEvalWhite[i][j], end='')
+                        else: 
+                            evaluation -= tables.pawnEvalBlack[i][j]
+                            #print(tempChessPiece.name, ' ', tempChessPiece.colour, ' ', tables.pawnEvalBlack[i][j], end='')
+                        #print('\ti: ', i, 'j: ', j)
                     elif tempChessPiece.name == 'bishop':
-                        evaluation += tables.bishopEvalWhite[i][j] if tempChessPiece.colour == 'white' else tables.bishopEvalBlack[i][j]
+                        if tempChessPiece.colour == 'white': 
+                            evaluation += tables.bishopEvalWhite[i][j]  
+                            #print(tempChessPiece.name, ' ', tempChessPiece.colour, ' ', tables.bishopEvalWhite[i][j], end='')
+                        else: 
+                            evaluation -= tables.bishopEvalBlack[i][j]
+                            #print(tempChessPiece.name, ' ', tempChessPiece.colour, ' ', tables.bishopEvalBlack[i][j], end='')
+                        #print('\ti: ', i, 'j: ', j)
                     elif tempChessPiece.name == 'rook':
-                        evaluation += tables.rookEvalWhite[i][j] if tempChessPiece.colour == 'white' else tables.rookEvalBlack[i][j]
+                        if tempChessPiece.colour == 'white': 
+                            evaluation += tables.rookEvalWhite[i][j]  
+                            #print(tempChessPiece.name, ' ', tempChessPiece.colour, ' ', tables.rookEvalWhite[i][j], end='')
+                        else: 
+                            evaluation -= tables.rookEvalBlack[i][j]
+                            #print(tempChessPiece.name, ' ', tempChessPiece.colour, ' ', tables.rookEvalBlack[i][j], end='')
+                        #print('\ti: ', i, 'j: ', j)
                     elif tempChessPiece.name == 'knight':
-                        evaluation += tables.knightEval[i][j]
+                        if tempChessPiece.colour == 'white': 
+                            evaluation += tables.knightEvalWhite[i][j] 
+                            #print(tempChessPiece.name, ' ', tempChessPiece.colour, ' ', tables.knightEvalWhite[i][j], end='')
+                        else: 
+                            evaluation -= tables.knightEvalBlack[i][j]
+                            #print(tempChessPiece.name, ' ', tempChessPiece.colour, ' ', tables.knightEvalBlack[i][j], end='')
+                        #print('\ti: ', i, 'j: ', j)
                     elif tempChessPiece.name == 'queen':
-                        evaluation += tables.evalQueen[i][j]
+                        if tempChessPiece.colour == 'white': 
+                            evaluation += tables.queenEvalWhite[i][j]
+                        else:
+                            evaluation -= tables.queenEvalBlack[i][j]
+                        #print(tempChessPiece.name, ' ', tempChessPiece.colour, ' ', tables.evalQueen[i][j], end='')
+                        #print('\ti: ', i, 'j: ', j)
                     elif tempChessPiece.name == 'king':
-                        evaluation += tables.kingEvalWhite[i][j] if tempChessPiece.colour == 'white' else tables.kingEvalBlack[i][j]
-                        #---------IMPLEMENT KING'S ENDGAME TABLE AND SCORE HERE-------#
+                        if self.gamePhase == 'starting':
+                            if tempChessPiece.colour == 'white': 
+                                evaluation += tables.kingEvalWhite[i][j] 
+                                #print(tempChessPiece.name, ' ', tempChessPiece.colour, ' ', tables.kingEvalWhite[i][j], end='')
+                            else: 
+                                evaluation -= tables.kingEvalBlack[i][j]
+                                #print(tempChessPiece.name, ' ', tempChessPiece.colour, ' ', tables.kingEvalBlack[i][j], end='')
+                            #print('\ti: ', i, 'j: ', j)
+                        else:
+                            if tempChessPiece.colour == 'white': 
+                                evaluation += tables.kingWhiteEndgame[i][j]
+                            else: 
+                                evaluation -= tables.kingBlackEndgame[i][j]
+                        # #---------IMPLEMENT KING'S ENDGAME TABLE AND SCORE HERE-------#
         return evaluation
 
     def materialFunction(self):
+            whiteMaterial = 0
+            blackMaterial = 0
             strength = 0
             for i in range(8):
                 for j in range(8):
                     if self.array[i][j].isEmpty == False:
                         if self.array[i][j].chessPiece.colour == 'white':
                             strength += self.array[i][j].chessPiece.strength
+                            whiteMaterial += 1
                         elif self.array[i][j].chessPiece.colour == 'black':
                             strength -= self.array[i][j].chessPiece.strength
+                            blackMaterial += 1
+            self.whiteMaterial = whiteMaterial
+            self.blackMaterial = blackMaterial
             return strength
 
     def evaluationFunction(self):
-        #return self.materialFunction()+self.positionsFunction()
-        return self.materialFunction()
+        self.updateGamePhase()
+        return self.materialFunction()+self.positionsFunction()
+        #return self.materialFunction()
     #------------------------------King/Winning-----------------------------------    
     def isHittingKingOfAgent(self, move, agent):
         return self.array[move.endX][move.endY].chessPiece.name == 'king' and self.array[move.endX][move.endY].chessPiece.colour == agent.colour
@@ -423,7 +487,10 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
             return False
         
         return True
-        
+
+    def updateGamePhase(self):
+        if len(self.history) > 40 or (self.whiteMaterial < 14 and self.blackMaterial < 14):
+            self.gamePhase = 'ending'  
     #------------------------------Special moves-----------------------------------    
     def checkPawnPromotion(self):
         for col in range(8):
