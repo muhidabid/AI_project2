@@ -39,7 +39,7 @@ def game(user, chessBot):
             playing=board.checkWinning(user, chessBot)      # check winning after each move
 
             board.displayChessBoard()
-            board.checkEnding()
+            board.updateGamePhase()
         else:
             print("!!! Invalid Move !!!")
         board.checkPawnPromotion()
