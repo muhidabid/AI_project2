@@ -2,7 +2,6 @@ import sys
 from chessBoard import *
 
 
-
 class Agent:
     def __init__(self, turn, colour):
         self.turn=turn #A flag that is true when its Computer's turn
@@ -21,18 +20,21 @@ def game(user, chessBot):
         print("\033[1;32;40m Enter current position and destined position\n")
         currentpos=input()
         destpos=input()
+        board.minTurn = False
         
         if board.moveChessPiece(currentpos,destpos, user, board.array):                                      # PLAYER MOVE
+            board.minTurn = True
             playing=board.checkWinning(user, chessBot)
 
             #board.randomMoveChessPiece(chessBot,user)
             #bestMove=Move(0,0,0,0)
-            bestMove=board.minmax(chessBot, user) 
+            #bestMove=board.minmax(chessBot, user) 
+            bestMove = board.findBestMoveAI(chessBot, user)
             board.noOfMovesHistory += 1
 
-            print(bestMove)
-            startIdentifier = chr(ord('a') + board.bestMove.startY) + str(8 - board.bestMove.startX) 
-            endIdentifier = chr(ord('a') + board.bestMove.endY) + str(8 - board.bestMove.endX) 
+            print(bestMove.startY,bestMove.startX,bestMove.endY,bestMove.endX)
+            startIdentifier = chr(ord('a') + bestMove.startY) + str(8 - bestMove.startX) 
+            endIdentifier = chr(ord('a') + bestMove.endY) + str(8 - bestMove.endX) 
             
             board.moveChessPiece(startIdentifier,endIdentifier, chessBot, board.array)                       # BOT MOVE
             board.noOfMovesHistory += 1

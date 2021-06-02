@@ -6,6 +6,9 @@ import tables
 from chessPieces import *
 from generateMoves import *
 
+# Initial values of Aplha and Beta 
+MAX, MIN = 20000, -20000 
+
 class square:
     def __init__(self, identifier, isEmpty):
         #self.boxColour="\033[1;30;47m"
@@ -27,6 +30,11 @@ class prevBeatChessPiece:
         self.atThisY=dCol
         self.chessPiece=chessPiece
 
+class miniMaxMove:
+    def __init__(self, move=Move(0,0,0,0), evaluation=0):
+        self.move = move
+        self.evaluation = evaluation
+
 class chessBoard: #chessBoard will contain a 2D array of square instances
 
     def __init__(self):
@@ -38,15 +46,19 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
         self.blackKingSideCastling = True
         self.whiteQueenSideCastling = {'right':True, 'left':True}
         self.whiteKingSideCastling = True
+        self.minTurn = False
         
         """ self.history = []
         self.whiteNumOfMoves = 0
         self.blackNumOfMoves = 0 """
 
         self.array = np.ndarray((8,8),dtype=object)
-        self.prevBoardState = np.ndarray((8,8),dtype=object)
         self.prevBeatChessPiece = prevBeatChessPiece(0,0,0,0,chessPiece('null','null','null',0))
         self.bestMove=Move(0,0,0,0)
+        
+        self.prevBoardState = None
+        self.makeEmptyBoard(self.prevBoardState)
+        """ self.prevBoardState = np.ndarray((8,8),dtype=object)
         num=8
         for i in range(8):
             st='a'
@@ -57,7 +69,21 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
                     empty=False
                 else:
                     empty=True
-                self.prevBoardState[i][j] = square(st,empty)
+                self.prevBoardState[i][j] = square(st,empty) """
+
+    def makeEmptyBoard(self, board):
+        board = np.ndarray((8,8),dtype=object)
+        num=8
+        for i in range(8):
+            st='a'
+            for j in range(8):
+                number=str(num)            
+                st=st+number
+                if(num>=7 or num <=2):
+                    empty=False
+                else:
+                    empty=True
+                board[i][j] = square(st,empty)
 
     def initializeBoard(self):
         num=8
@@ -294,22 +320,180 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
                     pass
                 else:
                     #print('legal')
-                    legalMoves.append(suedoLegalMove)
+                    if suedoLegalMove not in legalMoves:
+                        legalMoves.append(suedoLegalMove)
 
             #print("Unaking move...\nStart: ",suedoLegalMove.startX, ' ', suedoLegalMove.startY, "\nEnd: ", suedoLegalMove.endX, ' ', suedoLegalMove.endY)
             #self.unmakeMove(suedoLegalMove,currentAgent)
             self.array = copy.deepcopy(self.prevBoardState)     # UNMAKE MOVE
         return legalMoves
 
+
+
+
+
+    def findBestMoveAI(self,currentAgent,opponentAgent):      # bot, player
+        bestMove = Move(0,0,0,0)
+        moves=self.generateLegalMoves(currentAgent, opponentAgent, self.array)
+        miniMaxMoves = []
+
+        # make a list of miniMaxMoves
+        for move in moves:
+            self.prevBoardState = copy.deepcopy(self.array)                 # STORE BOARD STATE
+            self.makeMove(move,currentAgent)                                # MAKE MOVE
+
+            newMinMaxMove = miniMaxMove(move, self.evaluationFunction(self.array))
+            miniMaxMoves.append(newMinMaxMove) #Move(move.startX, move.startY, move.endX, move.endY)
+
+            self.array = copy.deepcopy(self.prevBoardState)                 # UNMAKE MOVE
+
+        # PRINT TO CHECK
+        for x in miniMaxMoves:
+            print ("Length of miniMaxMoves: ", len(miniMaxMoves), '\t', x.move.startX, x.move.startY, x.move.endX, x.move.endY,)
+        
+        for miniMaxMove_ in miniMaxMoves:
+        
+        #for move in moves:
+            #if moveToCheck is better than bestMove
+            prevBoardState = self.array                 # STORE BOARD STATE
+            prevBoardState = np.ndarray((8,8),dtype=object)
+            num=8
+            for i in range(8):
+                st='a'
+                for j in range(8):
+                    number=str(num)            
+                    st=st+number
+                    if(num>=7 or num <=2):
+                        empty=False
+                    else:
+                        empty=True
+                    prevBoardState[i][j] = square(st,empty)
+            #self.makeMove(miniMaxMoves[i].move,currentAgent)                # MAKE MOVE
+            prevBoardState = copy.deepcopy(self.array)
+            self.makeMove(miniMaxMove_.move,currentAgent)                # MAKE MOVE
+
+            bestMoveEval = self.miniMax(miniMaxMoves, currentAgent, opponentAgent, 2, self.minTurn, MAX, MIN)
+            
+            self.array = copy.deepcopy(prevBoardState)                 # UNMAKE MOVE
+
+            if miniMaxMove_.evaluation > bestMoveEval:
+                bestMoveEval = miniMaxMove_
+                print('IN FUNCITON ', miniMaxMove_.move.startY,miniMaxMove_.move.startX,miniMaxMove_.move.endY,miniMaxMove_.move.endX)
+                bestMove = copy.deepcopy(miniMaxMove_.move)
+        return bestMove
+
+
+
+
+    def miniMax(self, miniMaxMoves, currentAgent, opponentAgent, depth, isMinPlayer, alpha, beta):
+        #if len(miniMaxMoves) == 0 or depth == 0:
+        print("miniMax OK")
+        if depth == 0:
+            return self.evaluationFunction(self.array)
+        
+        if isMinPlayer:
+            bestVal = MAX
+            for moveToCheck in miniMaxMoves:
+                moves = self.generateLegalMoves(currentAgent, opponentAgent, self.array)
+
+                prevBoardState = self.array                             # STORE BOARD STATE
+                prevBoardState = np.ndarray((8,8),dtype=object)
+                num=8
+                for i in range(8):
+                    st='a'
+                    for j in range(8):
+                        number=str(num)            
+                        st=st+number
+                        if(num>=7 or num <=2):
+                            empty=False
+                        else:
+                            empty=True
+                        prevBoardState[i][j] = square(st,empty)
+                prevBoardState = copy.deepcopy(self.array)
+
+                miniMaxMoves_ = []
+                for move in moves:
+                    prevBoardState = copy.deepcopy(self.array)                 # STORE BOARD STATE
+                    self.makeMove(move,currentAgent)                                # MAKE MOVE
+
+                    newMinMaxMove = miniMaxMove(move, self.evaluationFunction(self.array))
+                    miniMaxMoves_.append(newMinMaxMove) #Move(move.startX, move.startY, move.endX, move.endY)
+
+                    self.array = copy.deepcopy(prevBoardState)                 # UNMAKE MOVE
+                #self.prevBoardState = copy.deepcopy(self.array)         # STORE BOARD STATE
+                
+                self.makeMove(moveToCheck.move,currentAgent)                   # MAKE MOVE
+                
+                value = self.miniMax(miniMaxMoves_, currentAgent, opponentAgent, depth-1, False, alpha, beta)
+                bestVal = min(bestVal, value)
+                beta = max(beta, bestVal)
+                
+                #self.array = copy.deepcopy(self.prevBoardState)         # UNMAKE MOVE
+                self.array = copy.deepcopy(prevBoardState)              # UNMAKE MOVE
+                if beta <= alpha:
+                    break
+            return bestVal
+        else:
+            bestVal = MIN
+            for moveToCheck in miniMaxMoves:
+                moves = self.generateLegalMoves(currentAgent, opponentAgent, self.array)
+                
+                
+                prevBoardState = self.array                             # STORE BOARD STATE
+                prevBoardState = np.ndarray((8,8),dtype=object)
+                num=8
+                for i in range(8):
+                    st='a'
+                    for j in range(8):
+                        number=str(num)            
+                        st=st+number
+                        if(num>=7 or num <=2):
+                            empty=False
+                        else:
+                            empty=True
+                        prevBoardState[i][j] = square(st,empty)
+                prevBoardState = copy.deepcopy(self.array)
+
+                miniMaxMoves_ = []
+                for move in moves:
+                    prevBoardState = copy.deepcopy(self.array)                 # STORE BOARD STATE
+                    self.makeMove(move,currentAgent)                                # MAKE MOVE
+
+                    newMinMaxMove = miniMaxMove(move, self.evaluationFunction(self.array))
+                    miniMaxMoves_.append(newMinMaxMove) #Move(move.startX, move.startY, move.endX, move.endY)
+
+                    self.array = copy.deepcopy(prevBoardState)                 # UNMAKE MOVE
+
+                value = self.miniMax(miniMaxMoves_, currentAgent, opponentAgent, depth-1, True, alpha, beta)
+                bestVal = min(bestVal, value)
+                beta = min(beta, bestVal)
+
+                #self.array = copy.deepcopy(self.prevBoardState)         # UNMAKE MOVE
+                self.array = copy.deepcopy(prevBoardState)              # UNMAKE MOVE
+                if beta <= alpha:
+                    break
+            return bestVal
+
+    def makeMinMaxList(self, moves, currentAgent):
+        miniMaxMoves = []
+        for move in moves:
+            self.prevBoardState = copy.deepcopy(self.array)                 # STORE BOARD STATE
+            self.makeMove(move,currentAgent)                                # MAKE MOVE
+
+            newMinMaxMove = miniMaxMove(move, self.evaluationFunction(self.array))
+            miniMaxMoves.append(newMinMaxMove) #Move(move.startX, move.startY, move.endX, move.endY)
+
+            self.array = copy.deepcopy(self.prevBoardState)                 # UNMAKE MOVE
+
     def minmax(self,currentAgent,opponentAgent,currentDepth=0):
-        currentDepth+=1     
+        #currentDepth+=1     
 
         if currentDepth > 2: #game over function call
             return self.bestMove
 
        
         
-        if currentDepth % 2 == 0:
+        if currentDepth % 2 == 1:
             # min player's turn
             Moves=self.generateLegalMoves(opponentAgent, currentAgent, self.array)
        #     self.displayChessBoard()
@@ -354,7 +538,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
             self.bestMove=copy.deepcopy(move)
 
          #   newBoard.displayChessBoard()
-            self.bestMove=self.minmax(opponentAgent,currentAgent,currentDepth)
+            self.bestMove=self.minmax(opponentAgent,currentAgent,currentDepth+1)
             return move
         
         else:
@@ -399,7 +583,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
          
             newBoard=maxBoards[maxIndex]
        #     newBoard.displayChessBoard()
-            self.bestMove=self.minmax(opponentAgent,currentAgent,currentDepth)
+            self.bestMove=self.minmax(opponentAgent,currentAgent,currentDepth+1)
             return move
                 
      
@@ -618,7 +802,7 @@ class chessBoard: #chessBoard will contain a 2D array of square instances
     def makeMove(self, move, agent):
         startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
         endIdentifier = chr(ord('a') + move.endY) + str(8 - move.endX)
-        return self.forceMoveChessPiece(startIdentifier,endIdentifier,agent)
+        return self.moveChessPiece(startIdentifier,endIdentifier,agent,self.array)
 
     def unmakeMove(self, move, agent):
         startIdentifier = chr(ord('a') + move.startY) + str(8 - move.startX) 
